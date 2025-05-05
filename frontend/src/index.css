@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure fonts are properly loaded before display */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/figtree/v1/9XzeR_rVeGMiCcDRyu-gap3z.woff2) format('woff2');
+}
+
+@layer base {
+  :root {
+    /* from guide */
+    --background: #F4F7FE;
+    --foreground: #0A0A0A;
+  
+    --card: #FFFFFF;
+    --card-foreground: #0A0A0A;
+  
+    --popover: #FFFFFF;
+    --popover-foreground: #0A0A0A;
+  
+    --primary: #3D66F7;
+    --primary-foreground: #FFFFFF;
+  
+    --secondary: #F0F0F0;
+    --secondary-foreground: #1A1A1A;
+  
+    --muted: #F5F5F5;
+    --muted-foreground: #777777;
+  
+    --accent: #F5F5F5;
+    --accent-foreground: #1A1A1A;
+  
+    --danger: #EF4444;
+    --danger-foreground: #FFFFFF;
+  
+    --border: #E5E7EB;
+    --input: #E5E7EB;
+    --ring: #94A3B8;
+  
+    --radius: 0.75rem;
+  
+    /* Sidebar */
+    --sidebar: #213B4C;
+    --sidebar-foreground: #FFFFFF;
+  }
+  
+  .dark {
+    --background: #1A1A1A;
+    --foreground: #FAFAFA;
+  
+    --card: #2A2A2A;
+    --card-foreground: #FFFFFF;
+  
+    --popover: #2A2A2A;
+    --popover-foreground: #FFFFFF;
+  
+    --primary: #5B84FF;
+    --primary-foreground: #0A0A0A;
+  
+    --secondary: #2F2F2F;
+    --secondary-foreground: #FFFFFF;
+  
+    --muted: #3A3A3A;
+    --muted-foreground: #AAAAAA;
+  
+    --accent: #3A3A3A;
+    --accent-foreground: #FFFFFF;
+  
+    --danger: #DC2626;
+    --danger-foreground: #FFFFFF;
+  
+    --border: #3F3F3F;
+    --input: #3F3F3F;
+    --ring: #64748B;
+  
+    --sidebar: #213B4C;
+    --sidebar-foreground: #FFFFFF;
+  }
+
+  * {
+    border-color: hsl(var(--border)); /* Set default border color using CSS variable */
+  }
+  
+  html, body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    width: 100%; /* Keep from original */
+    height: 100%; /* Keep from original */
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased; /* Use new variables */
+    font-family: 'Figtree', system-ui, Avenir, Helvetica, Arial, sans-serif; /* Add Figtree font */
+    margin: 0; /* Keep from original */
+    min-width: 100%; /* Keep from original */
+    min-height: 100vh; /* Keep from original */
+  }
+}
+
+/* Keep other base styles like a, h1, button defaults */
+a {
+  font-weight: 500;
+  /* Consider using HSL variables like color: hsl(var(--primary)); */
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+   /* Consider using HSL variables */
+  color: #535bf2;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  /* Consider using HSL variables */
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+
+
+@layer utilities {
+  /* Added from guide */
+  .glass-morphism {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)] dark:bg-black/5 dark:border-black/10;
+  }
+
+  /* Minimal custom scrollbar for select dropdowns */
+  .select-dropdown-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #c8c8c9 #fff;
+  }
+  .select-dropdown-scroll::-webkit-scrollbar {
+    width: 6px;
+    background: #fff;
+  }
+  .select-dropdown-scroll::-webkit-scrollbar-thumb {
+    background: #c8c8c9;
+    border-radius: 6px;
+  }
+  .select-dropdown-scroll::-webkit-scrollbar-track {
+    background: #fff;
+    border-radius: 0 0 8px 8px;
+  }
+}
+

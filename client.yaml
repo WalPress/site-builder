@@ -1,0 +1,10 @@
+---
+keystore:
+  File: /Users/beardkoda/Documents/projects/walpress/cli-runner/sui.keystore
+envs:
+  - alias: testnet
+    rpc: "https://fullnode.testnet.sui.io:443"
+    ws: ~
+    basic_auth: ~
+active_env: testnet
+active_address: "0x3ede979b4dc7b813f7d5c91e87d00e1a589fa45ba0cc3873314b26cedab583e0"
