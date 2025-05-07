@@ -16,7 +16,7 @@ interface NavItemProps {
 
 const NavItem: React.FC<NavItemProps> = ({ label, icon, href }) => {
   const location = useLocation(); // Get current location
-  const isActive = location.pathname === href || location.pathname.startsWith(href); // Determine active state based on href
+  const isActive = location.pathname === href || location.pathname.replace("/app", "").startsWith(href);
   
 
   const activeClasses = isActive
@@ -67,15 +67,15 @@ const Sidebar: React.FC = () => {
       <div className="flex-1 space-y-6">
         <NavGroup title="Home">
           {/* Updated NavItems as per prompt */}
-          <NavItem label="Get Started" icon={<FiHome />} href="/dashboard" />
+          <NavItem label="Get Started" icon={<FiHome />} href="/app" />
         </NavGroup>
         <NavGroup title="Publish">
           {/* <NavItem label="Site Builder" icon={<FiEdit />} href="/site-builder" />  */}
-          <NavItem label="My Sites" icon={<FiGrid />} href="/sites" />
-          <NavItem label="NS Manager" icon={<FiDatabase />} href="/ns-manager" />
+          <NavItem label="My Sites" icon={<FiGrid />} href="/app/sites" />
+          <NavItem label="NS Manager" icon={<FiDatabase />} href="/app/ns-manager" />
         </NavGroup>
         <NavGroup title="Others">
-          <NavItem label="Settings" icon={<FiSettings />} href="/settings" />
+          <NavItem label="Settings" icon={<FiSettings />} href="/app/settings" />
           <button 
             onClick={handleLogout}
             className="w-full flex items-center space-x-3 p-2 rounded-md text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-gray-700"

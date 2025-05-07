@@ -11,15 +11,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	SUI_BINARY_NAME = "sui"
+)
+
 func getSuiBinaryPath() string {
-	dataDir, dErr := GetUserDataPath("walpress")
+	dataDir, dErr := GetSuiPath()
 	if dErr != nil {
 		panic("Failed to get app data directory: " + dErr.Error())
 	}
 
 	suiDir := filepath.Join(dataDir, "sui")
 	goos := runtime.GOOS
-	binaryName := "sui"
+	binaryName := SUI_BINARY_NAME
 	if goos == "windows" {
 		binaryName += ".exe"
 	}
@@ -28,11 +32,11 @@ func getSuiBinaryPath() string {
 }
 
 func getConfigPath() string {
-	dataDir, dErr := GetUserDataPath("walpress")
+	dataDir, dErr := GetConfigPath()
 	if dErr != nil {
-		panic("Failed to get app data directory: " + dErr.Error())
+		panic("Failed to get sui config directory: " + dErr.Error())
 	}
-	return filepath.Join(dataDir, "sui", "config", "client.yaml")
+	return filepath.Join(dataDir, "client.yaml")
 }
 
 func filterWarnings(out string) string {

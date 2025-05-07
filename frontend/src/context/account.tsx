@@ -3,9 +3,10 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import Cookies from 'js-cookie';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { IconSpinner } from '../components/loader';
+import { SplashScreen } from '../components/loader';
 // import the backend app
-import { Start } from '../../wailsjs/go/src/app';
+import { CheckUserAuth } from '../../wailsjs/go/src/app';
+import { sleep } from '../utils';
 
 
 interface AccountContextProps {
@@ -14,7 +15,7 @@ interface AccountContextProps {
   setAuthToken: (wallet: string) => void;
 }
 
-const authRoutes = ["/", "/auth/local"];
+const authRoutes = ["/auth", "/auth/local"];
 
 const AccountContext = createContext<AccountContextProps | undefined>(undefined);
 
@@ -34,23 +35,31 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
 
 
   const checkAuth = async () => {
-      if (isAuthenticated) return;
+    if (isAuthenticated) return;
     try {
         setIsLoading(true);
-        const response = await Start();
+        const response = await CheckUserAuth();
         console.log("response==>", response);
-        setAuthToken(response);
-        if (authRoutes.includes(pathname)) {
-            navigate("/dashboard");
+        if (response.appReady) {
+          if (response.address) {
+            setAuthToken(response.address);
+            if (authRoutes.includes(pathname)) {
+              navigate("/app");
+            }
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          await sleep(3000);
+          checkAuth();
         }
     } catch (error) {
         setError(error as Error); 
         if (!authRoutes.includes(pathname)) {
             navigate("/");
         }
-    } finally {
         setIsLoading(false);
-    }
+    } 
 }
 
   useEffect(() => {
@@ -73,6 +82,19 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     navigate('/');
   };
 
+  if (isLoading) {
+    return (
+      <SplashScreen />
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen">
+        <div>{error.message}</div>
+      </div>
+    );
+  }
 
   return (
     <AccountContext.Provider
@@ -82,12 +104,6 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
         logout,
       }}
     > 
-      {!isLoading && error && <div>{error.message}</div>}
-      {isLoading && 
-        <div className="flex justify-center items-center h-screen">
-          <IconSpinner />
-        </div>
-      }
       {(!isLoading && !error) && children}
     </AccountContext.Provider>
   );

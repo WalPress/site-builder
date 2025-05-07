@@ -3,7 +3,6 @@ package src
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -20,6 +19,8 @@ type App struct {
 	ctx           context.Context
 	db            *sql.DB
 	env           string
+	ready         bool
+	installing    bool
 	mu            sync.Mutex
 	activeUploads map[string]*uploadSession
 }
@@ -34,11 +35,14 @@ func (a *App) Bootstrap(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// Start performs environment bootstrap steps
-func (a *App) Start() (string, error) {
+func (a *App) start() {
+	if a.installing {
+		return
+	}
+	a.installing = true
 	runtime.LogInfo(a.ctx, "Starting application...")
 	// Get the app data directory
-	dataDir, dErr := utils.GetUserDataPath("walpress")
+	dataDir, dErr := utils.GetUserDataPath()
 	if dErr != nil {
 		panic("Failed to get app data directory: " + dErr.Error())
 	}
@@ -59,42 +63,33 @@ func (a *App) Start() (string, error) {
 		runtime.LogInfo(a.ctx, "✅ Storage directory found: "+appDataPath)
 	}
 
-	// 2. Check for rust installation
-	a.checkRustInstallation()
-
-	// 3. Check for sui installation
-	suiBinaryPath, err := a.checkSuiInstallation(dataDir, folderAssets, a.env)
-	if err != nil {
-		log.Fatalf("Failed to check for sui installation: %v", err)
-	}
-	runtime.LogInfo(a.ctx, "✅ Sui binary downloaded at: "+suiBinaryPath)
-
-	// 4. Check for walrus installation
-	a.checkWalrusInstallation()
-
-	// 5. Check for site-builder installation
-	a.checkSiteBuilderInstallation(dataDir)
-
-	// 6. Check for walrus client config
-	a.checkWalrusClientConfig(dataDir)
-
-	// 7. Check for walrus site config
-	a.checkWalrusSiteConfig(dataDir)
-
-	// 8. Check for walrus site config
-	a.checkWalrusSiteConfig(dataDir)
-
 	runtime.LogInfo(a.ctx, "Application setup complete.")
-	runtime.LogInfo(a.ctx, "Checking for user authentication...")
-	return a.checkUserAuth()
+	a.ready = true
 }
 
-func (a *App) checkUserAuth() (string, error) {
-	runtime.LogInfo(a.ctx, "Checking for user authentication...")
-	return wallet.CheckUserAuth()
-}
-
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+// Start performs environment bootstrap steps
+func (a *App) CheckUserAuth() (map[string]interface{}, error) {
+	go a.start()
+	if !a.ready {
+		return map[string]interface{}{
+			"auth":     false,
+			"address":  "",
+			"appReady": a.ready,
+			"status":   "Installing dependencies...",
+		}, nil
+	}
+	// go a.init()
+	address, err := wallet.CheckUserAuth()
+	if err != nil {
+		return map[string]interface{}{
+			"auth":     false,
+			"address":  "",
+			"appReady": a.ready,
+		}, nil
+	}
+	return map[string]interface{}{
+		"auth":     true,
+		"address":  address,
+		"appReady": a.ready,
+	}, nil
 }

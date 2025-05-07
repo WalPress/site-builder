@@ -1,21 +1,28 @@
+/* -------------------------------------------------------------------------- */
+/*                             External Dependency                            */
+/* -------------------------------------------------------------------------- */
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+/* -------------------------------------------------------------------------- */
+/*                             Internal Dependency                            */
+/* -------------------------------------------------------------------------- */
+import InstallLayout from '../components/layouts/InstallLayout';
+
 const NotFoundPage: React.FC = () => {
   return (
-    <>
-      <h1 className="text-6xl font-bold text-primary mb-4">404</h1>
-      <h2 className="text-2xl font-semibold text-foreground mb-2">Page Not Found</h2>
+    <InstallLayout>
+      <h1 className="text-6xl font-bold text-primary mb-4">Application Error</h1>
       <p className="text-muted-foreground mb-6">
-        Sorry, the page you are looking for does not exist.
+        Application is not running. Please check the logs for more information.
       </p>
       <Link 
-        to="/" 
+        to="/dashboard" 
         className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
       >
-        Go back to Home
+        Go to Dashboard
       </Link>
-    </>
+    </InstallLayout>
   );
 };
 

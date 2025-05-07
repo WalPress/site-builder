@@ -3,6 +3,7 @@ package site
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -11,8 +12,8 @@ import (
 func Create(db *sql.DB, address string, name string, content string) (uuid.UUID, error) {
 	id := uuid.New()
 	err := db.QueryRow(
-		"INSERT INTO sites (id, address, name, content, published) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-		id.String(), address, name, content, false,
+		"INSERT INTO sites (id, address, name, content, published, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+		id.String(), address, name, content, false, "draft",
 	).Scan(&id)
 	fmt.Println("id", id, err)
 	if err != nil {
@@ -25,8 +26,8 @@ func Create(db *sql.DB, address string, name string, content string) (uuid.UUID,
 // Update updates a site
 func Update(db *sql.DB, id uuid.UUID, name string, content string) error {
 	_, err := db.Exec(
-		"UPDATE sites SET name = $1, content = $2 WHERE id = $3",
-		name, content, id,
+		"UPDATE sites SET name = $1, content = $2, updated_at = $3 WHERE id = $4",
+		name, content, time.Now(), id,
 	)
 	if err != nil {
 		return err

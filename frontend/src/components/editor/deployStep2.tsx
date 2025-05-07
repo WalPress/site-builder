@@ -9,8 +9,8 @@ interface DeploymentStep2Props {
 
 const DeploymentStep2: React.FC<DeploymentStep2Props> = ({ onDeploy, onCancel }) => {
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg w-[500px] text-center">
-      <img src={deployIcon} alt="Success" className="w-16 h-16 mx-auto mb-4" />
+    <div className="bg-white dark:bg-gray-800 rounded-lg w-[300px] text-center">
+      <img src={deployIcon} alt="Success" className="w-[82px] h-[82px] mx-auto mb-4" />
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Deploy Site</h2>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
         There is a fee for linking your Sui NS name to your site. The details are below.
@@ -30,11 +30,11 @@ const DeploymentStep2: React.FC<DeploymentStep2Props> = ({ onDeploy, onCancel })
       </div>
 
       <div className="flex justify-center gap-3">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
         <Button variant="primary" onClick={onDeploy}>
           Deploy
+        </Button>
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
         </Button>
       </div>
     </div>

@@ -10,12 +10,12 @@ import (
 )
 
 func createDB() *sql.DB {
-	dataDir, dErr := utils.GetUserDataPath("walpress")
+	dbDir, dErr := utils.GetDBPath()
 	if dErr != nil {
 		panic("Failed to get app data directory: " + dErr.Error())
 	}
 
-	dbPath := filepath.Join(dataDir, "db.sqlite")
+	dbPath := filepath.Join(dbDir, utils.DB_FILE)
 
 	fmt.Println("Creating DB at:", dbPath)
 	db, openErr := sql.Open("sqlite", dbPath)
@@ -55,8 +55,8 @@ func createSitesTable(db *sql.DB) {
 		address TEXT NOT NULL,
 		name TEXT NOT NULL,
 		content TEXT NOT NULL,
-		published BOOLEAN NOT NULL,
-		blob_id TEXT NOT NULL,
+		published BOOLEAN DEFAULT FALSE,
+		blob_id TEXT DEFAULT "",
 		status TEXT NOT NULL,
 		published_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

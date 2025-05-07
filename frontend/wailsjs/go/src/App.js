@@ -10,12 +10,20 @@ export function CheckRequirements() {
   return window['go']['src']['App']['CheckRequirements']();
 }
 
+export function CheckUserAuth() {
+  return window['go']['src']['App']['CheckUserAuth']();
+}
+
 export function CreateSite(arg1, arg2, arg3) {
   return window['go']['src']['App']['CreateSite'](arg1, arg2, arg3);
 }
 
 export function DeleteSite(arg1) {
   return window['go']['src']['App']['DeleteSite'](arg1);
+}
+
+export function DeploySite(arg1) {
+  return window['go']['src']['App']['DeploySite'](arg1);
 }
 
 export function FetchWallets() {
@@ -38,10 +46,6 @@ export function GetSite(arg1) {
   return window['go']['src']['App']['GetSite'](arg1);
 }
 
-export function Greet(arg1) {
-  return window['go']['src']['App']['Greet'](arg1);
-}
-
 export function ImportWallet() {
   return window['go']['src']['App']['ImportWallet']();
 }
@@ -56,10 +60,6 @@ export function ListSites() {
 
 export function SetSettings(arg1) {
   return window['go']['src']['App']['SetSettings'](arg1);
-}
-
-export function Start() {
-  return window['go']['src']['App']['Start']();
 }
 
 export function StartUpload(arg1, arg2) {

@@ -9,9 +9,10 @@ interface DeploymentModalProps {
   onClose: () => void;
   // Add any other props needed, e.g., initial data or final deploy handler
   onFinalDeploy: (epoch: string) => void; 
+  siteName: string;
 }
 
-const DeploymentModal: React.FC<DeploymentModalProps> = ({ isOpen, onClose, onFinalDeploy }) => {
+const DeploymentModal: React.FC<DeploymentModalProps> = ({ isOpen, onClose, onFinalDeploy, siteName }) => {
   const [step, setStep] = useState(1);
   const [epochValue, setEpochValue] = useState('');
 
@@ -39,6 +40,7 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({ isOpen, onClose, onFi
         {/* Remove default modal padding/styling if needed, steps have their own */}
         {step === 1 && (
           <DeploymentStep1 
+            siteName={siteName}
             epochValue={epochValue} 
             onEpochChange={setEpochValue} 
             onContinue={handleContinue} 

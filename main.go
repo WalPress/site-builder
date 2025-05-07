@@ -15,11 +15,12 @@ var embeddedAssets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := mainApp.NewApp()
+	downloader := mainApp.NewDownloader()
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "walpress",
-		Width:  1024,
-		Height: 768,
+		Width:  1280,
+		Height: 800,
 		AssetServer: &assetserver.Options{
 			Assets: embeddedAssets,
 		},
@@ -30,6 +31,7 @@ func main() {
 		// MinHeight:        768,
 		Bind: []interface{}{
 			app,
+			downloader,
 		},
 	})
 

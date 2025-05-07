@@ -9,9 +9,13 @@ export function AbortUpload(arg1:string):Promise<void>;
 
 export function CheckRequirements():Promise<void>;
 
+export function CheckUserAuth():Promise<{[key: string]: any}>;
+
 export function CreateSite(arg1:string,arg2:string,arg3:string):Promise<uuid.UUID>;
 
 export function DeleteSite(arg1:uuid.UUID):Promise<void>;
+
+export function DeploySite(arg1:uuid.UUID):Promise<any>;
 
 export function FetchWallets():Promise<any>;
 
@@ -23,8 +27,6 @@ export function GetSetting(arg1:string):Promise<string>;
 
 export function GetSite(arg1:uuid.UUID):Promise<site.Site>;
 
-export function Greet(arg1:string):Promise<string>;
-
 export function ImportWallet():Promise<void>;
 
 export function ListSettings():Promise<Array<settings.Settings>>;
@@ -32,8 +34,6 @@ export function ListSettings():Promise<Array<settings.Settings>>;
 export function ListSites():Promise<Array<site.Site>>;
 
 export function SetSettings(arg1:Array<src.SettingRequest>):Promise<void>;
-
-export function Start():Promise<string>;
 
 export function StartUpload(arg1:uuid.UUID,arg2:string):Promise<string>;
 

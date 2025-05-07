@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../Button'; // Assuming Button is in ../components
+import { Copy } from 'lucide-react';
 
 interface DeploymentStep3Props {
   onClose: () => void;
@@ -7,28 +8,23 @@ interface DeploymentStep3Props {
 
 const DeploymentStep3: React.FC<DeploymentStep3Props> = ({ onClose }) => {
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg w-[500px] text-center">
+    <div className="bg-white dark:bg-gray-800 rounded-lg w-[250px] text-center">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Success!</h2>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
         Your site deployment is initiated. Details related to the linking fee are shown below.
       </p>
 
-      <div className="bg-gray-100 dark:bg-gray-700 rounded p-4 mb-8 text-sm text-left">
-        {/* Example Fee Breakdown - Reuse from Step 2 or show confirmation details */}
-        <div className="flex justify-between mb-2">
-          <span className="text-gray-700 dark:text-gray-300">Linking Fee:</span>
-          <span className="font-medium text-gray-900 dark:text-white">0.05 SUI</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-700 dark:text-gray-300">Transaction Fee Estimate:</span>
-          <span className="font-medium text-gray-900 dark:text-white">~0.001 SUI</span>
-        </div>
-        {/* Add link to transaction explorer or site URL if available */}
+      <span className="text-gray-700 dark:text-gray-300">Blob Id:</span>
+      <div className="flex gap-4 bg-gray-100 dark:bg-gray-700 rounded p-4 mb-8 text-sm text-left">
+          <span className="font-medium text-gray-900 dark:text-white break-all">ox90asaf1354635768767564xsfaf3524</span>
+          <span className="text-gray-700 dark:text-gray-300"><Copy size={16} /></span>
       </div>
 
       <div className="flex justify-center gap-3">
-        {/* Changed to a single Close button */}
         <Button variant="primary" onClick={onClose}> 
+          Link Site
+        </Button>
+        <Button variant="outline" onClick={onClose}> 
           Close
         </Button>
       </div>

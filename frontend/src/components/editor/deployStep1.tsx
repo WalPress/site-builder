@@ -4,6 +4,7 @@ import Button from '../Button'; // Corrected path
 import { FiInfo } from 'react-icons/fi'; // Example icon import
 
 interface DeploymentStep1Props {
+  siteName: string;
   epochValue: string;
   onEpochChange: (value: string) => void;
   onContinue: () => void;
@@ -11,25 +12,27 @@ interface DeploymentStep1Props {
 }
 
 const DeploymentStep1: React.FC<DeploymentStep1Props> = ({ 
+  siteName,
   epochValue, 
   onEpochChange, 
   onContinue, 
   onCancel 
 }) => {
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg w-[500px]">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Deploy</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg w-[400px]">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Deploy {siteName} to the Walrus</h2>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Lorem ipsum dolor sit amet consectetur. </p>
       
       <div className="mb-4">
         <div className="flex justify-between items-center mb-1">
           <label htmlFor="epochInput" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Set Epoach
+            Set Epoach / Duration
           </label>
-          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 group relative">
+          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 group relative text-[#1585E0]">
             <FiInfo className="mr-1" />
             <span>What is an epoach?</span>
             {/* Basic tooltip styling idea (can be improved) */}
-            {/* <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            {/* <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap w-fit">
               Tooltip text about epoach goes here.
             </span> */}
           </div>
@@ -44,16 +47,16 @@ const DeploymentStep1: React.FC<DeploymentStep1Props> = ({
         />
       </div>
 
-      <div className="flex justify-end gap-3 mt-8">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
+      <div className="flex justify-start gap-3 mt-8">
         <Button 
           variant="primary" 
           onClick={onContinue}
           disabled={!epochValue.trim()} // Disable if epoch is empty
         >
           Continue
+        </Button>
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
         </Button>
       </div>
     </div>

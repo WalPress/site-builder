@@ -2,6 +2,7 @@ package src
 
 import (
 	"cli-runner/src/site"
+	"cli-runner/src/utils"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -157,16 +158,6 @@ func (a *App) DeleteSite(id uuid.UUID) error {
 	return nil
 }
 
-// Helper function to check for ".." sequences (basic path traversal prevention)
-func containsDotDot(s string) bool {
-	for i := 0; i+1 < len(s); i++ {
-		if s[i] == '.' && s[i+1] == '.' {
-			return true
-		}
-	}
-	return false
-}
-
 // StartUpload initializes a chunked file upload process
 func (a *App) StartUpload(siteID uuid.UUID, targetFileName string) (string, error) {
 	a.mu.Lock()
@@ -183,7 +174,7 @@ func (a *App) StartUpload(siteID uuid.UUID, targetFileName string) (string, erro
 	if targetFileName == "" {
 		return "", fmt.Errorf("target file name cannot be empty")
 	}
-	if filepath.IsAbs(targetFileName) || containsDotDot(targetFileName) {
+	if filepath.IsAbs(targetFileName) || utils.ContainsDotDot(targetFileName) {
 		return "", fmt.Errorf("invalid target file name: %s", targetFileName)
 	}
 
@@ -286,15 +277,14 @@ func (a *App) FinishUpload(uploadID string) (string, error) {
 	}
 
 	// 2. Determine final destination path
-	configDir, err := os.UserConfigDir()
+	configDir, err := utils.GetSitePath()
 	if err != nil {
 		runtime.LogError(a.ctx, fmt.Sprintf("Failed to get user config directory while finishing upload %s: %v", uploadID, err))
 		os.Remove(session.TempFilePath)   // Cleanup temp file
 		delete(a.activeUploads, uploadID) // Cleanup map entry
 		return "", fmt.Errorf("failed to get user config directory: %w", err)
 	}
-	baseAssetPath := filepath.Join(configDir, "walpress", "sites-data")
-	siteAssetPath := filepath.Join(baseAssetPath, session.SiteID.String())
+	siteAssetPath := filepath.Join(configDir, session.SiteID.String())
 	destinationPath := filepath.Join(siteAssetPath, session.TargetFileName)
 
 	// 3. Ensure final directory exists
@@ -359,4 +349,25 @@ func (a *App) AbortUpload(uploadID string) error {
 
 	runtime.LogInfof(a.ctx, "Upload %s aborted and cleaned up.", uploadID)
 	return nil
+}
+
+func (a *App) DeploySite(siteID uuid.UUID) (interface{}, error) {
+	site, err := a.GetSite(siteID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get site: %w", err)
+	}
+
+	// get site directory
+	siteDir, err := utils.GetSitePath()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get site path: %w", err)
+	}
+
+	currentSiteDirectory := filepath.Join(siteDir, site.ID.String())
+	siteBuilderOutput, err := utils.RunSiteBuilderCommandRaw("publish " + currentSiteDirectory)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run site builder command: %w", err)
+	}
+
+	return siteBuilderOutput, nil
 }

@@ -42,12 +42,10 @@ func ImportWallet() {
 
 // CheckUserAuth checks if the user is authenticated
 func CheckUserAuth() (string, error) {
-	fmt.Println("checking user auth")
 	out, err := utils.RunSuiCommandRaw("active-address")
 	if err != nil {
 		fmt.Println("no active address found: " + err.Error())
 		return "", fmt.Errorf("no active address found: " + err.Error())
 	}
-	fmt.Println("response==>", out)
 	return out, nil
 }

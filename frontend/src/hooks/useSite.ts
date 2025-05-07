@@ -28,10 +28,12 @@ const blobToBase64 = async (blob: Blob): Promise<string> => {
 const useSite = () => {
     const [sites, setSites] = useState<SiteStruct[]>([]);
     const [currentSite, setCurrentSite] = useState<SiteStruct | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isDeploying, setIsDeploying] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const { activeWallet } = useAccount();
 
     const fetchSites = async () => {
@@ -62,9 +64,9 @@ const useSite = () => {
     }
 
     const updateSite = async (id: string, name: string, content: string) => {
-        setIsLoading(true);
+        setIsSaving(true);
         const response = await UpdateSite(id, name, content);
-        setIsLoading(false);
+        setIsSaving(false);
         await getSite(id);
         return response;
     }
@@ -91,6 +93,13 @@ const useSite = () => {
         await fetchSites();
         setIsDeleting(false);
         return response;
+    }
+
+    const deploySite = async (id: string) => {
+        setIsDeploying(true);
+        // const response = await DeploySite(id);
+        setIsDeploying(false);
+        // return response;
     }
 
     const handleFileUpload = async (file: File, siteId: string): Promise<string> => {
@@ -168,7 +177,7 @@ const useSite = () => {
     };
 
     return {
-        sites, fetchSites, createSite, updateSite, getSite, isLoading, error, currentSite, deleteSite, isDeleting, handleFileUpload, isUploading
+        sites, fetchSites, createSite, updateSite, getSite, isLoading, error, currentSite, deleteSite, isDeleting, handleFileUpload, isUploading, isSaving, isDeploying, deploySite
     }
 }
 
