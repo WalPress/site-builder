@@ -3,7 +3,6 @@ import Button from '../Button';
 import { CopyIcon } from 'lucide-react';
 import useWallet from '../../hooks/useWallet';
 
-
 const LocalWallet: React.FC = () => {
   const [_, setIsCopied] = useState(false);
   const { generateWallet, newWallet, handleContinue } = useWallet();

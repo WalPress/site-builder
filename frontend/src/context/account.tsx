@@ -2,16 +2,18 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
 import { SplashScreen } from '../components/loader';
 // import the backend app
-import { CheckUserAuth } from '../../wailsjs/go/src/app';
+import { CheckUserAuth, GetPrivateKey } from '../../wailsjs/go/src/app';
 import { sleep } from '../utils';
 
 
 interface AccountContextProps {
   activeWallet: string;
   logout: () => void;
+  getPrivateKey: () => Promise<string>;
   setAuthToken: (wallet: string) => void;
 }
 
@@ -33,19 +35,22 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-
   const checkAuth = async () => {
     if (isAuthenticated) return;
     try {
         setIsLoading(true);
         const response = await CheckUserAuth();
-        console.log("response==>", response);
         if (response.appReady) {
-          if (response.address) {
+          if (response.auth) {
+            await getPrivateKey();
             setAuthToken(response.address);
             if (authRoutes.includes(pathname)) {
               navigate("/app");
             }
+            setIsLoading(false);
+            return;
+          } else {
+            navigate("/auth");
             setIsLoading(false);
             return;
           }
@@ -70,6 +75,13 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     Cookies.set('address', token);
     setIsAuthenticated(true);
     setActiveWallet(token);
+  }
+
+  const getPrivateKey = async () => {
+    const response = await GetPrivateKey(activeWallet);
+    const keypair = Ed25519Keypair.fromSecretKey(response.exportedPrivateKey);
+    setActiveWallet(keypair.toSuiAddress());
+    return response.exportedPrivateKey;
   }
 
   /**
@@ -101,6 +113,7 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
       value={{
         activeWallet,
         setAuthToken,
+        getPrivateKey,
         logout,
       }}
     > 

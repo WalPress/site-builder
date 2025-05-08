@@ -22,8 +22,12 @@ export function DeleteSite(arg1) {
   return window['go']['src']['App']['DeleteSite'](arg1);
 }
 
-export function DeploySite(arg1) {
-  return window['go']['src']['App']['DeploySite'](arg1);
+export function DeploySite(arg1, arg2, arg3) {
+  return window['go']['src']['App']['DeploySite'](arg1, arg2, arg3);
+}
+
+export function EstimateStorageCost(arg1, arg2, arg3) {
+  return window['go']['src']['App']['EstimateStorageCost'](arg1, arg2, arg3);
 }
 
 export function FetchWallets() {
@@ -38,12 +42,28 @@ export function GenerateWallet() {
   return window['go']['src']['App']['GenerateWallet']();
 }
 
+export function GetAllNetworks() {
+  return window['go']['src']['App']['GetAllNetworks']();
+}
+
+export function GetBalance() {
+  return window['go']['src']['App']['GetBalance']();
+}
+
+export function GetPrivateKey(arg1) {
+  return window['go']['src']['App']['GetPrivateKey'](arg1);
+}
+
 export function GetSetting(arg1) {
   return window['go']['src']['App']['GetSetting'](arg1);
 }
 
 export function GetSite(arg1) {
   return window['go']['src']['App']['GetSite'](arg1);
+}
+
+export function GetTestnetToken() {
+  return window['go']['src']['App']['GetTestnetToken']();
 }
 
 export function ImportWallet() {
@@ -58,12 +78,24 @@ export function ListSites() {
   return window['go']['src']['App']['ListSites']();
 }
 
+export function Logout() {
+  return window['go']['src']['App']['Logout']();
+}
+
 export function SetSettings(arg1) {
   return window['go']['src']['App']['SetSettings'](arg1);
 }
 
 export function StartUpload(arg1, arg2) {
   return window['go']['src']['App']['StartUpload'](arg1, arg2);
+}
+
+export function SwitchAddress(arg1) {
+  return window['go']['src']['App']['SwitchAddress'](arg1);
+}
+
+export function SwitchNetwork(arg1) {
+  return window['go']['src']['App']['SwitchNetwork'](arg1);
 }
 
 export function UpdateSite(arg1, arg2, arg3) {

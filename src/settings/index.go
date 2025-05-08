@@ -17,14 +17,17 @@ func CreateOrUpdate(db *sql.DB, key string, value string) error {
 	fmt.Println("CreateOrUpdate", key, value)
 	tx, err := db.Begin()
 	if err != nil {
+		fmt.Println("CreateOrUpdate", err)
 		return err
 	}
 	defer tx.Rollback()
 
 	_, err = tx.Exec("INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2", key, value)
 	if err != nil {
+		fmt.Println("CreateOrUpdate", err)
 		return err
 	}
+	fmt.Println("CreateOrUpdate", "commit")
 	return tx.Commit()
 }
 

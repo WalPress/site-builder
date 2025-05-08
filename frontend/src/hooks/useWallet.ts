@@ -1,11 +1,12 @@
 import { useState } from "react";
 
 import { NewWalletResponse, Wallet, WalletStruct } from "../types/wallet";
-import { FetchWallets, GenerateWallet } from "../../wailsjs/go/src/app";
+import { FetchWallets, GenerateWallet, SwitchAddress } from "../../wailsjs/go/src/app";
 import { useAccount } from "../context/account";
-
+import { useNavigate } from "react-router-dom";
 const useWallet = () => {
     const { activeWallet, setAuthToken } = useAccount();
+    const navigate = useNavigate();
     const [isFetchingWallets, setIsFetchingWallets] = useState(true);
     const [newWallet, setNewWallet] = useState<NewWalletResponse>({} as NewWalletResponse);
     const [existingWallets, setExistingWallets] = useState<WalletStruct>({} as WalletStruct);
@@ -15,8 +16,13 @@ const useWallet = () => {
         setNewWallet(result);
     }
 
-    const handleContinue = (address: string) => {
+    const handleContinue = async (address: string) => {
+        console.log('handleContinue', address)
+        // call switch address
+        const result = await SwitchAddress(address);
+        console.log('result', result)
         setAuthToken(address);
+        return navigate('/app');
     }
 
     const fetchWallets = async () => {
@@ -39,17 +45,7 @@ const useWallet = () => {
     }
 
 
-    const selectWallet = (wallet: Wallet) => {
-        console.log('wallet', wallet)
-        if (wallet.address === existingWallets.activeAddress) {
-            console.log('wallet is already active');
-            // call login function  
-            setAuthToken(wallet.address);
-        } else {
-            console.log('wallet is not active');
-            // set wallet active
-        }
-    }
+    const selectWallet = (wallet: Wallet) => handleContinue(wallet.address);
 
     const handleWalletImport = (e: React.MouseEvent) => {
       e.preventDefault(); // Prevent default link behavior

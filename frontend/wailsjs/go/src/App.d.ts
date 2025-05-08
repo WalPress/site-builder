@@ -15,7 +15,9 @@ export function CreateSite(arg1:string,arg2:string,arg3:string):Promise<uuid.UUI
 
 export function DeleteSite(arg1:uuid.UUID):Promise<void>;
 
-export function DeploySite(arg1:uuid.UUID):Promise<any>;
+export function DeploySite(arg1:uuid.UUID,arg2:number,arg3:string):Promise<any>;
+
+export function EstimateStorageCost(arg1:uuid.UUID,arg2:number,arg3:string):Promise<number>;
 
 export function FetchWallets():Promise<any>;
 
@@ -23,9 +25,17 @@ export function FinishUpload(arg1:string):Promise<string>;
 
 export function GenerateWallet():Promise<any>;
 
+export function GetAllNetworks():Promise<any>;
+
+export function GetBalance():Promise<any>;
+
+export function GetPrivateKey(arg1:string):Promise<any>;
+
 export function GetSetting(arg1:string):Promise<string>;
 
 export function GetSite(arg1:uuid.UUID):Promise<site.Site>;
+
+export function GetTestnetToken():Promise<any>;
 
 export function ImportWallet():Promise<void>;
 
@@ -33,9 +43,15 @@ export function ListSettings():Promise<Array<settings.Settings>>;
 
 export function ListSites():Promise<Array<site.Site>>;
 
+export function Logout():Promise<string>;
+
 export function SetSettings(arg1:Array<src.SettingRequest>):Promise<void>;
 
 export function StartUpload(arg1:uuid.UUID,arg2:string):Promise<string>;
+
+export function SwitchAddress(arg1:string):Promise<any>;
+
+export function SwitchNetwork(arg1:string):Promise<any>;
 
 export function UpdateSite(arg1:uuid.UUID,arg2:string,arg3:string):Promise<void>;
 

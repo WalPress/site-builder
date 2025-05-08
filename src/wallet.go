@@ -20,3 +20,29 @@ func (a *App) FetchWallets() (interface{}, error) {
 func (a *App) ImportWallet() {
 	wallet.ImportWallet()
 }
+
+// SwitchAddress switches the active address
+func (a *App) SwitchAddress(address string) (interface{}, error) {
+	return wallet.SwitchAddress(a.db, address)
+}
+
+// SwitchNetwork switches the active network
+func (a *App) SwitchNetwork(network string) (interface{}, error) {
+	return wallet.SwitchNetwork(a.db, network)
+}
+
+func (a *App) GetBalance() (interface{}, error) {
+	return wallet.GetBalance()
+}
+
+func (a *App) GetTestnetToken() (interface{}, error) {
+	return wallet.GetTestnetFaucet()
+}
+
+func (a *App) GetAllNetworks() (interface{}, error) {
+	return wallet.GetAllNetworks()
+}
+
+func (a *App) GetPrivateKey(address string) (interface{}, error) {
+	return wallet.GetPrivateKey(address)
+}

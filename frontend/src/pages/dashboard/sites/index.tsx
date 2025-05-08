@@ -13,16 +13,14 @@ dayjs.extend(relativeTime);
 type SiteStatus = 'Unlinked' | 'Draft' | 'Live';
 
 // Map API status strings to SiteCard status prop
-const mapApiStatusToSiteStatus = (apiStatus?: string): SiteStatus => {
-  switch (apiStatus) {
-    case "pending": // Assuming pending means draft
-      return 'Draft';
-    case "ready": // Assuming ready means live/deployed
-      return 'Live';
-    // Add other cases as needed based on actual API responses
-    default: // Fallback for unknown or unlinked status
-      return 'Unlinked';
+const mapApiStatusToSiteStatus = (apiStatus?: string, isPublished?: boolean): SiteStatus => {
+  if (isPublished || apiStatus === "deployed") {
+    return 'Unlinked';
   }
+  if (apiStatus === "draft") {
+    return 'Draft';
+  }
+  return 'Draft';
 };
 
 const MySitesPage: React.FC = () => {
@@ -75,12 +73,12 @@ const MySitesPage: React.FC = () => {
               key={site.id}
               id={site.id}
               title={site.name.slice(0, 20) + (site.name.length > 20 ? "..." : "")}
-              status={mapApiStatusToSiteStatus(site.status)}
+              status={mapApiStatusToSiteStatus(site.status, site.published)}
               imageUrl={site1Img}
               lastEdited={dayjs(site.updatedAt).fromNow()}
               description={"Lorem ipsum dolor sit amet consectetur. Elit in eget risus fames massa maecenas malesuada."}
               blobId={site.blobId}
-              actionText={site.status === "published" ? "Visit site" : "Deploy site"}
+              actionText={site.status === "linked" ? "Visit site" : site.published ? "Update site" : "Deploy site"}
               onActionClick={() => alert(`Action clicked for ${site.name}`)}
               onDeleteClick={() => deleteSite(site.id)}
               isDeleting={isDeleting}
@@ -92,7 +90,7 @@ const MySitesPage: React.FC = () => {
       <CreateSiteForm 
         open={isCreateSiteModalOpen} 
         onClose={() => setIsCreateSiteModalOpen(false)}
-      />  
+      /> 
     </>
   );
 };

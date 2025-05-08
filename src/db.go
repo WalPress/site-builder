@@ -36,7 +36,7 @@ func createDB() *sql.DB {
 func createSettingsTable(db *sql.DB) {
 	createTable := `
 	CREATE TABLE IF NOT EXISTS settings (
-		key TEXT NOT NULL,
+		key TEXT NOT NULL PRIMARY KEY UNIQUE,
 		value TEXT NOT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -58,6 +58,9 @@ func createSitesTable(db *sql.DB) {
 		published BOOLEAN DEFAULT FALSE,
 		blob_id TEXT DEFAULT "",
 		status TEXT NOT NULL,
+		object_id TEXT DEFAULT "",
+		linked BOOLEAN NOT NULL DEFAULT FALSE,
+		linked_at DATETIME DEFAULT NULL,
 		published_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -67,6 +70,12 @@ func createSitesTable(db *sql.DB) {
 	if err != nil {
 		panic("❌ Failed to create sites table: " + err.Error())
 	}
+	updateTable := `
+	ALTER TABLE sites ADD COLUMN linked BOOLEAN NOT NULL DEFAULT FALSE;
+	ALTER TABLE sites ADD COLUMN linked_at DATETIME DEFAULT NULL;
+	ALTER TABLE sites ADD COLUMN object_id TEXT DEFAULT "";
+	`
+	db.Exec(updateTable)
 }
 
 func createNSTable(db *sql.DB) {

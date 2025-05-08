@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { CreateSite, DeleteSite, GetSite, ListSites, UpdateSite, StartUpload, UploadChunk, FinishUpload, AbortUpload } from "../../wailsjs/go/src/app";
+import { CreateSite, DeleteSite, GetSite, ListSites, UpdateSite, StartUpload, UploadChunk, FinishUpload, AbortUpload, DeploySite, EstimateStorageCost } from "../../wailsjs/go/src/app";
 import { SiteStruct } from "../types/site";
 import { v4 as uuidv4 } from 'uuid';
 import { useAccount } from '../context/account';
+import useNetwork from './useNetwork';
 
 const fileReaderPromise = (reader: FileReader, blob: Blob, readAs: 'readAsDataURL' | 'readAsArrayBuffer' | 'readAsBinaryString' | 'readAsText'): Promise<string | ArrayBuffer | null> => {
     return new Promise((resolve, reject) => {
@@ -35,6 +36,7 @@ const useSite = () => {
     const [isDeploying, setIsDeploying] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const { activeWallet } = useAccount();
+    const { currentNetwork } = useNetwork();
 
     const fetchSites = async () => {
         setIsLoading(true);
@@ -44,8 +46,13 @@ const useSite = () => {
                 setSites(response.map((site) => ({
                     id: site.id.toString(),
                     name: site.name,
-                content: site.content,
-                createdAt: site.created_at,
+                    objectId: site.object_id,
+                    blobId: site.blob_id,
+                    address: site.address,
+                    status: site.status,
+                    published: site.published,
+                    publishedAt: site.published_at,
+                    createdAt: site.created_at,
                     updatedAt: site.updated_at,
                 })));
             } else {
@@ -78,6 +85,7 @@ const useSite = () => {
             name: response.name,
             content: response.content,
             blobId: response.blob_id,
+            objectId: response.object_id,
             address: response.address,
             status: response.status,
             published: response.published,
@@ -95,11 +103,16 @@ const useSite = () => {
         return response;
     }
 
-    const deploySite = async (id: string) => {
+    const deploySite = async (siteId: string, epoch: number) => {
         setIsDeploying(true);
-        // const response = await DeploySite(id);
+        console.log("Deploying site:", epoch, currentNetwork);
+        if (!siteId) {
+            throw new Error("No site selected");
+        }
+        const response = await DeploySite(siteId, epoch, "mainnet");
+        console.log("Deployed site:", response);
         setIsDeploying(false);
-        // return response;
+        return response;
     }
 
     const handleFileUpload = async (file: File, siteId: string): Promise<string> => {
@@ -176,8 +189,13 @@ const useSite = () => {
         }
     };
 
+    const estimateStorageCost = async (siteId: string, epoch: number) => {
+        const response = await EstimateStorageCost(siteId, epoch, currentNetwork);
+        return response;
+    }
+
     return {
-        sites, fetchSites, createSite, updateSite, getSite, isLoading, error, currentSite, deleteSite, isDeleting, handleFileUpload, isUploading, isSaving, isDeploying, deploySite
+        sites, fetchSites, createSite, updateSite, getSite, isLoading, error, currentSite, deleteSite, isDeleting, handleFileUpload, isUploading, isSaving, isDeploying, deploySite, estimateStorageCost
     }
 }
 

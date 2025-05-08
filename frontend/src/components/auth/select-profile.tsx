@@ -3,7 +3,6 @@ import useWallet from '../../hooks/useWallet';
 import { CheckCircle, ChevronRight } from 'lucide-react';
 import { Loader } from '../loader';
 
-
 // Define props interface to accept the click handler
 interface SelectWalletProfileProps {
   onImportClick: () => void;

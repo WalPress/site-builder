@@ -4,6 +4,7 @@ import Button from './Button';
 import { EditIcon, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ConfirmDeleteModal from './editor/ConfirmDeleteModal';
+import DeploymentModal from './DeploymentModal';
 
 type SiteStatus = 'Unlinked' | 'Draft' | 'Live';
 
@@ -44,14 +45,14 @@ const SiteCard: React.FC<SiteCardProps> = ({
   imageUrl,
   lastEdited,
   description,
-  blobId,
+  // blobId,
   actionText,
   onActionClick,
   onDeleteClick,
   isDeleting
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
+  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const handleDeleteClick = () => {
     setIsDeleteModalOpen(true);
   };
@@ -63,17 +64,25 @@ const SiteCard: React.FC<SiteCardProps> = ({
     setIsDeleteModalOpen(false);
   };
 
+  const handleActionClick = () => {
+    if (actionText === 'Deploy site' || actionText === 'Update site') {
+      setIsDeployModalOpen(true);
+    } else {
+      onActionClick?.();
+    }
+  };
+
   return (
     <>
       <div className="bg-card text-card-foreground rounded-lg shadow-sm overflow-hidden border border-border">
         <div className="relative h-40 bg-gray-200 dark:bg-gray-700"> {/* Image container */}
           <img src={imageUrl} alt={`${title} cover`} className="w-full h-full object-cover" />
           <StatusBadge status={status} />
-          {blobId && (
+          {/* {blobId && (
             <span className="absolute top-3 right-3 text-xs text-muted-foreground opacity-75">
               Blob ID: {blobId}
             </span>
-          )}
+          )} */}
         </div>
 
         <div className="p-4">
@@ -93,7 +102,7 @@ const SiteCard: React.FC<SiteCardProps> = ({
 
           <div className="flex w-full justify-between items-center border-t border-border pt-3">
             <Button 
-              onClick={onActionClick}
+              onClick={handleActionClick}
               variant="outline"
             >
               {actionText}
@@ -115,6 +124,13 @@ const SiteCard: React.FC<SiteCardProps> = ({
         onConfirm={handleConfirmDelete}
         siteName={title}
         isDeleting={isDeleting}
+      />
+
+      <DeploymentModal 
+        isOpen={isDeployModalOpen} 
+        onClose={() => setIsDeployModalOpen(false)}
+        siteName={title}
+        siteId={id}
       />
     </>
   );

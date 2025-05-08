@@ -47,12 +47,16 @@ export namespace site {
 	    address: string;
 	    id: number[];
 	    blob_id: string;
+	    object_id: string;
 	    name: string;
 	    content: string;
 	    status: string;
 	    published: boolean;
 	    // Go type: time
 	    published_at: any;
+	    linked: boolean;
+	    // Go type: time
+	    linked_at: any;
 	    // Go type: time
 	    created_at: any;
 	    // Go type: time
@@ -67,11 +71,14 @@ export namespace site {
 	        this.address = source["address"];
 	        this.id = source["id"];
 	        this.blob_id = source["blob_id"];
+	        this.object_id = source["object_id"];
 	        this.name = source["name"];
 	        this.content = source["content"];
 	        this.status = source["status"];
 	        this.published = source["published"];
 	        this.published_at = this.convertValues(source["published_at"], null);
+	        this.linked = source["linked"];
+	        this.linked_at = this.convertValues(source["linked_at"], null);
 	        this.created_at = this.convertValues(source["created_at"], null);
 	        this.updated_at = this.convertValues(source["updated_at"], null);
 	    }

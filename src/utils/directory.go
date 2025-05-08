@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -19,6 +20,9 @@ const (
 	SITE_PATH         = "sites-data"
 	DB_PATH           = "db"
 	DB_FILE           = "db.sqlite"
+	IS_AUTHENTICATED  = "is_authenticated"
+	ACTIVE_NETWORK    = "active_network"
+	ACTIVE_ADDRESS    = "active_address"
 )
 
 func GetUserDataPath() (string, error) {
@@ -199,102 +203,13 @@ func GetDBPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	return filepath.Join(userDataPath, DB_PATH), nil
+	dbPath := filepath.Join(userDataPath, DB_PATH)
+	err = os.MkdirAll(dbPath, 0755)
+	if err != nil {
+		return "", err
+	}
+	return dbPath, nil
 }
-
-// extractFileFromTarGz extracts a specific file from a .tar.gz archive to a destination path.
-// func extractFileFromTarGz(gzipStreamPath string, targetFileInArchive string, finalDestinationPath string) error {
-// 	gzipFile, err := os.Open(gzipStreamPath)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to open gzip stream %s: %w", gzipStreamPath, err)
-// 	}
-// 	defer gzipFile.Close()
-
-// 	uncompressedStream, err := gzip.NewReader(gzipFile)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to create gzip reader for %s: %w", gzipStreamPath, err)
-// 	}
-// 	defer uncompressedStream.Close()
-
-// 	tarReader := tar.NewReader(uncompressedStream)
-
-// 	for {
-// 		header, err := tarReader.Next()
-// 		if err == io.EOF {
-// 			break // End of archive
-// 		}
-// 		if err != nil {
-// 			return fmt.Errorf("failed to read tar header: %w", err)
-// 		}
-
-// 		// Normalize path separators for comparison
-// 		if filepath.ToSlash(header.Name) == filepath.ToSlash(targetFileInArchive) {
-// 			if header.Typeflag == tar.TypeReg { // Is a regular file
-// 				outFile, err := os.Create(finalDestinationPath)
-// 				if err != nil {
-// 					return fmt.Errorf("failed to create target file %s: %w", finalDestinationPath, err)
-// 				}
-// 				// Using a variable to capture io.Copy error to handle outFile.Close() correctly
-// 				var copyErr error
-// 				func() {
-// 					defer outFile.Close()
-// 					_, copyErr = io.Copy(outFile, tarReader)
-// 				}()
-// 				if copyErr != nil {
-// 					return fmt.Errorf("failed to copy content to target file %s: %w", finalDestinationPath, copyErr)
-// 				}
-// 				return nil // File found and extracted
-// 			} else {
-// 				return fmt.Errorf("target path %s in archive is not a regular file (type: %c)", targetFileInArchive, header.Typeflag)
-// 			}
-// 		}
-// 	}
-// 	return fmt.Errorf("target file %s not found in tar.gz archive %s", targetFileInArchive, gzipStreamPath)
-// }
-
-// // extractFileFromZip extracts a specific file from a .zip archive to a destination path.
-// func extractFileFromZip(zipFilePath string, targetFileInArchive string, finalDestinationPath string) error {
-// 	r, err := zip.OpenReader(zipFilePath)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to open zip file %s: %w", zipFilePath, err)
-// 	}
-// 	defer r.Close()
-
-// 	for _, f := range r.File {
-// 		// Normalize path separators for comparison
-// 		if filepath.ToSlash(f.Name) == filepath.ToSlash(targetFileInArchive) {
-// 			if f.FileInfo().IsDir() {
-// 				return fmt.Errorf("target path %s in archive is a directory, not a file", targetFileInArchive)
-// 			}
-
-// 			rc, err := f.Open()
-// 			if err != nil {
-// 				return fmt.Errorf("failed to open file %s in zip: %w", f.Name, err)
-// 			}
-
-// 			outFile, err := os.Create(finalDestinationPath)
-// 			if err != nil {
-// 				rc.Close() // Close source file before returning
-// 				return fmt.Errorf("failed to create target file %s: %w", finalDestinationPath, err)
-// 			}
-
-// 			var copyErr error
-// 			// Scope to manage closing rc and outFile
-// 			func() {
-// 				defer rc.Close()
-// 				defer outFile.Close()
-// 				_, copyErr = io.Copy(outFile, rc)
-// 			}()
-
-// 			if copyErr != nil {
-// 				return fmt.Errorf("failed to copy content to target file %s from zip entry %s: %w", finalDestinationPath, f.Name, copyErr)
-// 			}
-// 			return nil // File found and extracted
-// 		}
-// 	}
-// 	return fmt.Errorf("target file %s not found in zip archive %s", targetFileInArchive, zipFilePath)
-// }
 
 // Helper function to check for ".." sequences (basic path traversal prevention)
 func ContainsDotDot(s string) bool {
@@ -304,4 +219,16 @@ func ContainsDotDot(s string) bool {
 		}
 	}
 	return false
+}
+
+func EscapePathForShell(path string) string {
+	return strings.ReplaceAll(path, " ", `\ `)
+}
+
+func GetFileSize(path string) (int64, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return 0, err
+	}
+	return info.Size(), nil
 }

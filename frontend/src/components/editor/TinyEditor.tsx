@@ -3,15 +3,14 @@
 import React, { useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 
-interface BuilderFormProps {
+interface TinyEditorProps {
   value: string;
   onChange: (data: string) => void;
   onImageUpload: (file: File) => Promise<string>;
 }
 
-const BuilderForm: React.FC<BuilderFormProps> = ({ value, onChange }) => {
-    console.log(value);
-    const editorRef = useRef<Editor | unknown>(null);
+const TinyEditor: React.FC<TinyEditorProps> = ({ value, onChange }) => {
+  const editorRef = useRef<Editor | unknown>(null);
   return (
     <div className="w-[75vw] max-w-full">        
       <Editor
@@ -34,7 +33,6 @@ const BuilderForm: React.FC<BuilderFormProps> = ({ value, onChange }) => {
           content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
         }}
         onEditorChange={(content) => {
-            console.log(content);
             onChange(content);
         }}
         licenseKey='gpl'
@@ -52,4 +50,4 @@ const BuilderForm: React.FC<BuilderFormProps> = ({ value, onChange }) => {
   );
 };
 
-export default BuilderForm; 
+export default TinyEditor; 

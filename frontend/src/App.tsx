@@ -8,7 +8,7 @@ import { Routes, Route } from 'react-router-dom';
 /*                             Internal Dependency                            */
 /* -------------------------------------------------------------------------- */
 import AuthPage from './pages/auth/auth';
-import AuthLocalPage from './pages/auth/auth-local';
+import AuthWalletPage from './pages/auth/wallet';
 import DashboardPage from './pages/dashboard';
 import MySitesPage from './pages/dashboard/sites';
 import SuiNsManagerPage from './pages/dashboard/ns-manager';
@@ -28,7 +28,7 @@ const AppRoutes = () => (
 
     <Route path="auth" element={<AuthLayout />}>
       <Route index element={<AuthPage />} />
-      <Route path="wallet" element={<AuthLocalPage />} />
+      <Route path="wallet" element={<AuthWalletPage />} />
     </Route>
 
     <Route path="app" element={<DashboardLayout />}>

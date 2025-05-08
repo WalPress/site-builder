@@ -29,7 +29,7 @@ const CreateSiteForm: React.FC<CreateSiteFormProps> = ({ open, onClose }) => {
     if (siteTitle.trim()) {
       const siteId = await createSite(siteTitle.trim());
       if (siteId) {
-        navigate(`/sites/${siteId}/edit`);
+        navigate(`/app/sites/${siteId}/edit`);
         onClose();
       }
     }

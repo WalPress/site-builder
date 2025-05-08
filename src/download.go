@@ -19,13 +19,10 @@ import (
 type NetworkType string
 
 const (
-	Mainnet           NetworkType = "mainnet"
-	Testnet           NetworkType = "testnet"
-	WALRUS_PATH                   = utils.TOOLS_PATH + "/" + utils.WALRUS_PATH
-	SUI_PATH                      = utils.TOOLS_PATH + "/" + utils.SUI_PATH
-	SITE_BUILDER_PATH             = utils.TOOLS_PATH + "/" + utils.SITE_BUILDER_PATH
-	APP_NAME                      = "walpress"
-	SUI_VERSION                   = "1.48.0"
+	Mainnet     NetworkType = "mainnet"
+	Testnet     NetworkType = "testnet"
+	APP_NAME                = "walpress"
+	SUI_VERSION             = "1.47.0"
 )
 
 // Downloader holds progress values and provides downloading methods.
@@ -127,17 +124,18 @@ func (d *Downloader) downloadSuiBinaryWithProgress(network NetworkType) error {
 	url := fmt.Sprintf("https://github.com/MystenLabs/sui/releases/download/%s/%s", version, filename)
 
 	// Create destination folder (using UserConfigDir)
-	destDir, err := utils.GetUserDataPath()
+	downloadPath, err := utils.GetSuiPath()
 	if err != nil {
 		return err
 	}
-	downloadPath := filepath.Join(destDir, SUI_PATH)
 	os.MkdirAll(downloadPath, 0755)
 	fmt.Println("Download path:", downloadPath)
 	destFile := filepath.Join(downloadPath, filename)
-	suiFile := filepath.Join(destDir, SUI_PATH, "sui")
+	suiFile := filepath.Join(downloadPath, "sui")
+	fmt.Println("suiFile", suiFile)
 	if utils.FileExists(suiFile) {
-		d.setSiteBuilderProgress(100)
+		fmt.Println("Sui binary already exists")
+		d.setSuiProgress(100)
 		return nil
 	}
 	fmt.Println("Creating destination file:", destFile)
@@ -260,6 +258,7 @@ func (d *Downloader) downloadSiteBuilderBinaryWithProgress(network NetworkType) 
 	fmt.Println("Copied site-builder binary to destination file")
 	// rename the file to site-builder
 	os.Rename(destFile, filepath.Join(toolDir, "site-builder"))
+	utils.RunCliCommandWithoutCtx("chmod", &utils.RunCliCommandOptions{Cwd: toolDir}, "+x", filepath.Join(toolDir, "site-builder"))
 	// Make the binary executable
 	os.Chmod(destFile, 0755)
 	fmt.Println("Made site-builder binary executable")
@@ -337,6 +336,7 @@ func (d *Downloader) downloadWalrusBinaryWithProgress(network NetworkType) error
 	// rename the file to walrus
 	os.Rename(destFile, filepath.Join(destPath, "walrus"))
 	os.Chmod(destFile, 0755)
+	utils.RunCliCommandWithoutCtx("chmod", &utils.RunCliCommandOptions{Cwd: destPath}, "+x", filepath.Join(destPath, "walrus"))
 	return nil
 }
 
@@ -444,7 +444,7 @@ func (d *Downloader) checkWalrusClientConfig(network NetworkType) {
 		log.Fatalf("❌ Failed to get config directory: %v", err)
 	}
 	configFile := "client_config.yaml"
-	configFilePath := configDir + "/" + string(network) + "/" + configFile
+	configFilePath := filepath.Join(configDir, configFile)
 	downloadConfig := false
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
@@ -462,24 +462,57 @@ func (d *Downloader) checkWalrusClientConfig(network NetworkType) {
 		}
 
 		// Download the file
-		// curl https://docs.wal.app/setup/client_config.yaml -o ./config/walrus_client.yaml
-		curlCmd := exec.Command("curl", "https://docs.wal.app/setup/"+configFile, "-o", configFilePath)
-		curlCmd.Stdout = os.Stdout
-		curlCmd.Stderr = os.Stderr
-		if err := curlCmd.Run(); err != nil {
-			// Clean up potentially incomplete file on error
-			os.Remove(configFilePath)
-			log.Fatalf("Failed to download client_config.yaml: %v", err)
+		out, err := os.Create(configFilePath)
+		if err != nil {
+			log.Fatalf("Failed to create config file %s: %v", configFilePath, err)
 		}
+		defer out.Close()
+		fmt.Println("Opened destination file:", configFilePath)
+		url := "https://docs.wal.app/setup/" + configFile
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Fatalf("Failed to download config file %s: %v", configFilePath, err)
+		}
+		defer resp.Body.Close()
+		fmt.Println("Closed response body")
+		if resp.StatusCode != http.StatusOK {
+			fmt.Println("Failed to download client_config.yaml:", resp)
+			log.Fatalf("Failed to download config file %s: %v", configFilePath, err)
+		}
+		fmt.Println("Downloaded client_config.yaml")
+		contentLen := resp.ContentLength
+		progressWriter := &ProgressWriter{
+			Writer: out,
+			Total:  contentLen,
+			Callback: func(p int) {
+				fmt.Println("Updating client_config.yaml progress:", p)
+			},
+		}
+
+		_, err = io.Copy(progressWriter, resp.Body)
+		if err != nil {
+			log.Fatalf("Failed to copy config file %s: %v", configFilePath, err)
+		}
+		// curl https://docs.wal.app/setup/client_config.yaml -o ./config/walrus_client.yaml
+		// curlCmd := exec.Command("curl", "https://docs.wal.app/setup/"+configFile, "-o", configFilePath)
+		// curlCmd.Stdout = out
+		// curlCmd.Stderr = out
+		// if err := curlCmd.Run(); err != nil {
+		// 	// Clean up potentially incomplete file on error
+		// 	os.Remove(configFilePath)
+		// 	log.Fatalf("Failed to download client_config.yaml: %v", err)
+		// }
 		fmt.Printf("✅ Downloaded walrus_client.yaml to %s\n", configFilePath)
-		// Update the wallet config
-		updateWalletConfig(configFilePath, string(network), configDir+"/walrus_client.yaml", string(network))
-		fmt.Println("✅ Successfully updated", configFilePath)
 	} else if err != nil {
 		log.Fatalf("❌ Error checking for config file %s: %v", configFilePath, err)
 	} else {
 		fmt.Printf("✅ Found Walrus config file: %s\n", configFilePath)
 	}
+
+	// Update the wallet config
+	updateWalletConfig(configFilePath, string(network), filepath.Join(configDir, "client.yaml"))
+
+	fmt.Println("✅ Successfully updated", configFilePath)
 
 	// Modify the config file contents
 	log.Printf("Checking and updating %s...", configFilePath)
@@ -507,10 +540,10 @@ func (d *Downloader) checkWalrusSiteConfig(network NetworkType) {
 	if err != nil {
 		log.Fatalf("❌ Failed to get config directory: %v", err)
 	}
-	sitesConfigPath := configDir + "/sites-config.yaml"
-	fmt.Println("Checking for %s...", sitesConfigPath)
+	sitesConfigPath := filepath.Join(configDir, "sites-config.yaml")
+	fmt.Println("Checking for", sitesConfigPath)
 	if _, err := os.Stat(sitesConfigPath); os.IsNotExist(err) {
-		log.Println("❌ %s not found. Creating file...", sitesConfigPath)
+		log.Printf("❌ %s not found. Creating file...", sitesConfigPath)
 
 		// Ensure .walrus directory exists (should exist from step 4 or 5, but check again)
 		if _, dirErr := os.Stat(configDir); os.IsNotExist(dirErr) {
@@ -519,11 +552,11 @@ func (d *Downloader) checkWalrusSiteConfig(network NetworkType) {
 				log.Fatalf("❌ Failed to create directory %s: %v", configDir, mkdirErr)
 			}
 		}
-		toolsDir, err := utils.GetToolsPath()
+		toolsDir, err := utils.GetWalrusPath()
 		if err != nil {
 			log.Fatalf("❌ Failed to get tools directory: %v", err)
 		}
-		walrusFile := filepath.Join(toolsDir, WALRUS_PATH, "walrus")
+		walrusFile := filepath.Join(toolsDir, "walrus")
 		configDir, err := utils.GetConfigPath()
 		if err != nil {
 			log.Fatalf("❌ Failed to get config directory: %v", err)
@@ -531,22 +564,24 @@ func (d *Downloader) checkWalrusSiteConfig(network NetworkType) {
 		suiConfigFile := filepath.Join(configDir, "client.yaml")
 
 		// Default content for sites-config.yaml
-		defaultSitesConfigContent := `contexts:
+		defaultSitesConfigContent := `
+contexts:
   testnet:
     package: 0xf99aee9f21493e1590e7e5a9aea6f343a1f381031a04a732724871fc294be799
-	rpc_url: https://fullnode.testnet.sui.io:443
-    wallet: ` + suiConfigFile + `
-    walrus_binary: ` + walrusFile + `
-    walrus_config: ` + configDir + "/testnet/client_config.yaml" + `
-    gas_budget: 500000000
+    general:
+      rpc_url: https://fullnode.testnet.sui.io:443
+      wallet: ` + suiConfigFile + `
+      walrus_binary: ` + walrusFile + `
+      walrus_config: ` + configDir + "/client_config.yaml" + `
+      gas_budget: 500000000
   mainnet:
     package: 0x26eb7ee8688da02c5f671679524e379f0b837a12f1d1d799f255b7eea260ad27
-	rpc_url: https://fullnode.mainnet.sui.io:443
-    wallet: ` + suiConfigFile + `
-    walrus_binary: ` + walrusFile + `
-    walrus_config: ` + configDir + "/mainnet/client_config.yaml" + `
-    gas_budget: 500000000
-
+    general:
+      rpc_url: https://fullnode.mainnet.sui.io:443
+        wallet: ` + suiConfigFile + `
+        walrus_binary: ` + walrusFile + `
+        walrus_config: ` + configDir + "/client_config.yaml" + `
+        gas_budget: 500000000
 default_context: ` + string(network) + `
 `
 		if writeErr := os.WriteFile(sitesConfigPath, []byte(defaultSitesConfigContent), 0644); writeErr != nil {
@@ -558,14 +593,11 @@ default_context: ` + string(network) + `
 	} else {
 		fmt.Printf("✅ %s found.\n", sitesConfigPath)
 	}
-
 }
 
 // CheckDownloadStatus checks if the user has downloaded the binaries and the config files
 func (d *Downloader) CheckDownloadStatus() (bool, error) {
 	d.checkRustInstallation()
-	d.checkWalrusClientConfig(Mainnet)
-	d.checkWalrusSiteConfig(Mainnet)
 	d.checkWalrusClientConfig(Testnet)
 	d.checkWalrusSiteConfig(Testnet)
 
@@ -574,20 +606,31 @@ func (d *Downloader) CheckDownloadStatus() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	suiFile := filepath.Join(toolsDir, utils.SUI_PATH)
+	suiFile := filepath.Join(toolsDir, utils.SUI_PATH, "sui")
+	siteBuilderFile := filepath.Join(toolsDir, utils.SITE_BUILDER_PATH, "site-builder")
+	walFile := filepath.Join(toolsDir, utils.WALRUS_PATH, "walrus")
 	fmt.Println("suiFile", suiFile)
-	siteBuilderFile := filepath.Join(toolsDir, SITE_BUILDER_PATH)
 	fmt.Println("siteBuilderFile", siteBuilderFile)
-	walFile := filepath.Join(toolsDir, WALRUS_PATH)
 	fmt.Println("walFile", walFile)
-
+	if !utils.FileExists(suiFile) {
+		fmt.Println("❌ suiFile not found")
+		return false, nil
+	}
+	if !utils.FileExists(siteBuilderFile) {
+		fmt.Println("❌ siteBuilderFile not found")
+		return false, nil
+	}
+	if !utils.FileExists(walFile) {
+		fmt.Println("❌ walFile not found")
+		return false, nil
+	}
 	if utils.FileExists(suiFile) && utils.FileExists(siteBuilderFile) && utils.FileExists(walFile) {
+		fmt.Println("✅ suiFile-exists", utils.FileExists(suiFile))
+		fmt.Println("✅ siteBuilderFile-exists", utils.FileExists(siteBuilderFile))
+		fmt.Println("✅ walFile-exists", utils.FileExists(walFile))
 		fmt.Println("✅ download complete")
 		return true, nil
 	}
-	fmt.Println("❌ suiFile-exists", utils.FileExists(suiFile))
-	fmt.Println("❌ siteBuilderFile-exists", utils.FileExists(siteBuilderFile))
-	fmt.Println("❌ walFile-exists", utils.FileExists(walFile))
 	fmt.Println("❌ download not complete")
 	return false, nil
 }

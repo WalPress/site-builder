@@ -3,11 +3,11 @@ package src
 import (
 	"cli-runner/src/site"
 	"cli-runner/src/utils"
-	"context"
 	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,10 +21,6 @@ type uploadSession struct {
 	TempFilePath   string
 	FileHandle     *os.File
 	Started        time.Time // For potential cleanup logic
-}
-
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
 }
 
 func (a *App) ListSites() ([]site.Site, error) {
@@ -351,23 +347,87 @@ func (a *App) AbortUpload(uploadID string) error {
 	return nil
 }
 
-func (a *App) DeploySite(siteID uuid.UUID) (interface{}, error) {
+func (a *App) EstimateStorageCost(siteID uuid.UUID, epoch int64, activeNetwork string) (float64, error) {
 	site, err := a.GetSite(siteID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get site: %w", err)
+		return 0, fmt.Errorf("failed to get site: %w", err)
 	}
 
 	// get site directory
-	siteDir, err := utils.GetSitePath()
+	sitePath, err := utils.GetSitePath()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get site path: %w", err)
+	}
+
+	currentSiteDirectory := filepath.Join(sitePath, site.ID.String())
+
+	// get file size
+	fileSizeBytes, err := utils.GetFileSize(currentSiteDirectory)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get file size: %w", err)
+	}
+
+	cost := utils.EstimateStorageCost(fileSizeBytes)
+	return cost, nil
+}
+
+func (a *App) DeploySite(siteID uuid.UUID, epoch int64, activeNetwork string) (interface{}, error) {
+	currentSite, err := a.GetSite(siteID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get site: %w", err)
+	}
+	fmt.Println("currentSite", currentSite, "activeNetwork", activeNetwork, "epoch", epoch)
+
+	// get site directory
+	sitePath, err := utils.GetSitePath()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get site path: %w", err)
 	}
+	if currentSite.Published && currentSite.ObjectID != "" {
+		siteName := currentSite.Name
+		currentSiteDirectory := "./" + utils.SITE_PATH + "/" + currentSite.ID.String()
+		fmt.Println("currentSiteDirectory", currentSite.ObjectID)
+		siteBuilderOutput, err := utils.ExecUpdateSite(activeNetwork, siteName, strconv.FormatInt(epoch, 10), currentSiteDirectory, currentSite.ObjectID)
+		fmt.Println(siteBuilderOutput)
+		if err != nil {
+			return nil, fmt.Errorf("failed to run site builder command: %w", err)
+		}
+		objectID, blobID, err := utils.ExtractIDs(siteBuilderOutput)
+		fmt.Println("objectID-->", objectID, "blobID", blobID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract IDs: %w", err)
+		}
 
-	currentSiteDirectory := filepath.Join(siteDir, site.ID.String())
-	siteBuilderOutput, err := utils.RunSiteBuilderCommandRaw("publish " + currentSiteDirectory)
-	if err != nil {
-		return nil, fmt.Errorf("failed to run site builder command: %w", err)
+		err = site.UpdateSiteStorage(a.db, siteID, objectID, blobID)
+		if err != nil {
+			runtime.LogError(a.ctx, fmt.Sprintf("Failed to update site record for ID %s: %v", siteID, err))
+			return nil, fmt.Errorf("failed to update site record: %w", err)
+		}
+		return map[string]string{
+			"objectId": objectID,
+			"blobId":   blobID,
+		}, nil
+	} else {
+		siteName := currentSite.Name
+		currentSiteDirectory := filepath.Join(sitePath, currentSite.ID.String())
+		siteBuilderOutput, err := utils.ExecDeploySite(activeNetwork, siteName, strconv.FormatInt(epoch, 10), currentSiteDirectory)
+		if err != nil {
+			return nil, fmt.Errorf("failed to run site builder command: %w", err)
+		}
+		objectID, blobID, err := utils.ExtractIDs(siteBuilderOutput)
+		fmt.Println("objectID-->", objectID, "blobID", blobID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract IDs: %w", err)
+		}
+
+		err = site.UpdateSiteStorage(a.db, siteID, objectID, blobID)
+		if err != nil {
+			runtime.LogError(a.ctx, fmt.Sprintf("Failed to update site record for ID %s: %v", siteID, err))
+			return nil, fmt.Errorf("failed to update site record: %w", err)
+		}
+		return map[string]string{
+			"objectId": objectID,
+			"blobId":   blobID,
+		}, nil
 	}
-
-	return siteBuilderOutput, nil
 }

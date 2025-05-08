@@ -1,31 +1,80 @@
-import React, { useState } from 'react';
-import { FiSearch, FiTrash2, FiRefreshCw, FiLink } from 'react-icons/fi'; // Example icons
+import React, { useEffect, useState } from 'react';
+import { FiSearch, FiRefreshCw, FiLink } from 'react-icons/fi'; // Example icons
+import useNsNames from '../../../hooks/useNsNames';
+import { Loader } from '../../../components/loader';
+import LinkNSNameModal from '../../../components/ns/linking/LinkNSNameModal';
+import RegisterNSModal from '../../../components/ns/register/RegisterNSModal';
+import RenewModal from '../../../components/ns/renew/RenewModal'; 
 
-// Placeholder data for the table
-const nsData = [
-  {
-    id: '1',
-    alias: 'mycoolsite.sui',
-    registrationDate: 'Dec 30, 2019 07:52',
-    expiryPeriod: 'Expiring in 245 days',
-  },
-  {
-    id: '2',
-    alias: 'another-project.sui',
-    registrationDate: 'Dec 30, 2019 07:52',
-    expiryPeriod: 'Expiring in 221 days',
-  },
-  {
-    id: '3',
-    alias: 'test-domain-name.sui',
-    registrationDate: 'Dec 30, 2019 07:52',
-    expiryPeriod: 'Expiring in 145 days',
-  },
-];
+import { BrowserOpenURL } from '../../../../wailsjs/runtime/runtime';
+
+// Helper function to format timestamp (in ms) to a date string (MM/DD/YYYY)
+const formatTimestampToDate = (timestampMs: number | string): string => {
+  // Ensure the timestamp is a number
+  const numericTimestamp = typeof timestampMs === 'string' ? parseInt(timestampMs, 10) : timestampMs;
+
+  // Check if the conversion resulted in a valid number
+  if (isNaN(numericTimestamp)) {
+    return 'Invalid Date'; // Or throw an error, or return a specific placeholder
+  }
+
+  const date = new Date(numericTimestamp);
+
+  // Format to MM/DD/YYYY using toLocaleDateString options for better control
+  return date.toLocaleDateString("en-US", {
+    year: 'numeric',    // "2023"
+    month: '2-digit',  // "03" for March
+    day: '2-digit',    // "15"
+  });
+};
+
+// Function to get the date 1 year before the given expiry timestamp
+const GetRegistrationDate = (timestampMs: number | string): string => {
+  const numericTimestamp = typeof timestampMs === 'string' ? parseInt(timestampMs, 10) : timestampMs;
+
+  if (isNaN(numericTimestamp)) {
+    return 'Invalid Date'; // Handle invalid input
+  }
+
+  const date = new Date(numericTimestamp);
+  
+  // Subtract 1 year from the date
+  date.setFullYear(date.getFullYear() - 1);
+
+  // Format to MM/DD/YYYY
+  return date.toLocaleDateString("en-US", {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
+
+const getLink = (link: string) => {
+  return link.split(".")[0] + ".wal.app";
+}
 
 const SuiNsManagerPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('Linked NS');
+  const { nsNames, isLoading, getNsNames } = useNsNames();
+  const [isLinkingModalOpen, setIsLinkingModalOpen] = useState(false);
+  const [isRegisteringModalOpen, setIsRegisteringModalOpen] = useState(false);
+  const [isRenewingModalOpen, setIsRenewingModalOpen] = useState(false);
 
+  const [selectedNs, setSelectedNs] = useState<any>(null);
+
+  useEffect(() => {
+    getNsNames();
+  }, []);
+
+  const handleOpenLinkingSiteModal = (ns: any) => {
+    setSelectedNs(ns);
+    setIsLinkingModalOpen(true);
+  }
+
+  const handleOpenRenewModal = (ns: any) => {
+    setSelectedNs(ns);
+    setIsRenewingModalOpen(true);
+  }
+  
   return (
     <main className="p-6 flex flex-col flex-1 bg-background">
       {/* Page Header */}
@@ -36,16 +85,16 @@ const SuiNsManagerPage: React.FC = () => {
             Manage your Sui NS ID conveniently from this page.
           </p>
         </div>
-        <button className="bg-gradient-to-r from-green-500 to-blue-800 hover:opacity-90 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+        <button className="bg-gradient-to-r from-green-500 to-blue-800 hover:opacity-90 text-white font-medium py-2 px-4 rounded-md transition duration-200" onClick={() => setIsRegisteringModalOpen(true)}>
           Register new name server
         </button>
       </div>
 
       {/* Content Wrapper */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 min-h-[60vh]">
         <div className="flex flex-row justify-between flex-1">
           {/* Toggle Tabs */}
-          <div className="flex border-b border-gray-200 bg-background dark:border-gray-700 mb-6">
+          {/* <div className="flex border-b border-gray-200 bg-background dark:border-gray-700 mb-6">
             <button
               onClick={() => setActiveTab('Linked NS')}
               className={`py-2 px-4 text-sm font-medium transition-colors 
@@ -66,7 +115,7 @@ const SuiNsManagerPage: React.FC = () => {
             >
               Unlinked NS
             </button>
-          </div>
+          </div> */}
 
           {/* Search Bar */}
           <div className="flex justify-end items-center mb-4">
@@ -84,7 +133,9 @@ const SuiNsManagerPage: React.FC = () => {
           </div>
         </div>
         {/* Table */}
-        {activeTab === 'Linked NS' && (
+        {isLoading && <Loader />}
+        {/* {!isLoading && activeTab === 'Linked NS' && ( */}
+        {!isLoading && (
           <div className="overflow-x-auto">
             <table className="w-full mt-4 text-sm text-left text-gray-700 dark:text-gray-300">
               <thead className="text-xs text-gray-900 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700">
@@ -96,36 +147,57 @@ const SuiNsManagerPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {nsData.map((item, index) => (
+                {nsNames.map((item, index) => (
                   <tr key={index} className="bg-white dark:bg-gray-800 text-gray-500 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                    <td className="px-6 py-2 font-medium  dark:text-white whitespace-nowrap">{item.alias}</td>
-                    <td className="px-6 py-2">{item.registrationDate}</td>
-                    <td className="px-6 py-2">{item.expiryPeriod}</td>
+                    <td className="px-6 py-2 font-medium  dark:text-white whitespace-nowrap">{item.name}</td>
+                    <td className="px-6 py-2">{GetRegistrationDate(item.expiry)}</td>
+                    <td className="px-6 py-2">{formatTimestampToDate(item.expiry)}</td>
                     <td className="px-6 py-2 text-right">
                       <div className="flex justify-end items-center space-x-4">
-                        <a href="#" className="font-medium text-green-600 dark:text-green-400 hover:underline flex items-center">
-                          <FiRefreshCw className="w-3.5 h-3.5 mr-1"/> renew NS
-                        </a>
-                        <a href="#" className="font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center">
+                        <span className="font-medium text-green-600 dark:text-green-400 hover:underline flex items-center" onClick={() => handleOpenRenewModal(item)}>
+                          <FiRefreshCw className="w-3.5 h-3.5 mr-1"/> Renew NS
+                        </span>
+                        <span className="font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center" onClick={() => BrowserOpenURL(getLink(item.link))}>
                           <FiLink className="w-3.5 h-3.5 mr-1"/> Visit site
-                        </a>
-                        <button className="font-medium text-red-600 dark:text-red-400 hover:underline flex items-center">
-                          <FiTrash2 className="w-3.5 h-3.5 mr-1"/> Unlink site
-                        </button>
+                        </span>
+                        <span className="font-medium text-red-600 dark:text-red-400 hover:underline flex items-center cursor-pointer" onClick={() => handleOpenLinkingSiteModal(item)}>
+                          <FiLink className="w-3.5 h-3.5 mr-1"/> Link Site
+                        </span>
                       </div>
                     </td>
                   </tr>
                 ))}
+                {nsNames.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-center">
+                      No NS Record found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         )}
-         {activeTab === 'Unlinked NS' && (
+         {/* {!isLoading && activeTab === 'Unlinked NS' && (
            <div className="text-center py-10 text-gray-500 dark:text-gray-400">
              No unlinked NS found.
            </div>
-         )}
+         )} */}
       </div>
+      <LinkNSNameModal
+        isOpen={isLinkingModalOpen}
+        onClose={() => setIsLinkingModalOpen(false)}
+        selectedNs={selectedNs}
+      />
+      <RegisterNSModal
+        isOpen={isRegisteringModalOpen}
+        onClose={() => setIsRegisteringModalOpen(false)}
+      />
+      <RenewModal
+        isOpen={isRenewingModalOpen}
+        onClose={() => setIsRenewingModalOpen(false)}
+        selectedNs={selectedNs}
+      />
     </main>
   );
 };

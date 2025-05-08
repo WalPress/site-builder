@@ -10,7 +10,7 @@ const AuthPage: React.FC = () => {
   // Re-add useAccount and button handlers
   const { setAuthToken } = useAccount();
   const navigate = useNavigate();
-  const handleConnectLocal = () => navigate('/auth/local');
+  const handleConnectLocal = () => navigate('/auth/wallet');
   const handleConnectSlush = () => setAuthToken('local'); // Assuming these still map to 'local' for now
   const handleConnectOther = () => setAuthToken('local');
 
@@ -38,6 +38,7 @@ const AuthPage: React.FC = () => {
             variant="custom"
             onClick={handleConnectSlush}
             className="w-full bg-blue-600 text-white hover:bg-blue-700 font-medium"
+            disabled={true}
           >
             Connect using Slush
           </Button>
@@ -47,6 +48,7 @@ const AuthPage: React.FC = () => {
             variant="custom"
             onClick={handleConnectOther}
             className="w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 font-medium"
+            disabled={true}
           >
             Connect with other wallet
           </Button>

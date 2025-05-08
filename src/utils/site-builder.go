@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"fmt"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -20,7 +23,7 @@ func getSiteBuilderBinaryPath() string {
 	if goos == "windows" {
 		binaryName += ".exe"
 	}
-	return filepath.Join(dataDir, "bin", binaryName)
+	return filepath.Join(dataDir, binaryName)
 }
 
 func getSiteBuilderConfigPath() (string, error) {
@@ -37,7 +40,11 @@ func RunSiteBuilderCommand(command string) (interface{}, error) {
 	if cErr != nil {
 		return nil, cErr
 	}
-	jsonOutput, err := RunCliCommandWithoutCtx(binaryPath, "--config", configPath, command, "--json")
+	rawCommand := fmt.Sprintf("--client sites-config.yaml %s --json", command)
+	fmt.Println(binaryPath, rawCommand)
+	args := strings.Fields(rawCommand)
+	fmt.Println("args", args)
+	jsonOutput, err := RunCliCommandWithoutCtx(binaryPath, &RunCliCommandOptions{Cwd: filepath.Dir(configPath)}, command, "--json")
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +53,82 @@ func RunSiteBuilderCommand(command string) (interface{}, error) {
 
 func RunSiteBuilderCommandRaw(command string) (string, error) {
 	binaryPath := getSiteBuilderBinaryPath()
-	configPath, cErr := getSiteBuilderConfigPath()
+	userDataPath, cErr := GetUserDataPath()
 	if cErr != nil {
 		return "", cErr
 	}
-	output, err := RunCliCommandWithoutCtx(binaryPath, "--config", configPath, command)
+	fmt.Println("binaryPath", binaryPath)
+	rawCommand := fmt.Sprintf("--config config/sites-config.yaml %s", command)
+	fmt.Println(binaryPath, rawCommand)
+	args := strings.Fields(rawCommand)
+	fmt.Println("args", args)
+	// output, err := RunCliCommandWithoutCtx(binaryPath, &RunCliCommandOptions{Cwd: userDataPath}, args...)
+
+	cmd := exec.Command(
+		binaryPath,
+		"--config", "config/sites-config.yaml",
+		"--context", "mainnet",
+		"publish",
+		"--site-name", "Bawo Site",
+		"--epochs", "1",
+		"sites-data/ca91e082-6ef1-44d2-8368-44e7ed37d4de",
+	)
+	cmd.Dir = userDataPath
+	fmt.Println("cmd.Dir", cmd.Dir)
+	output, err := cmd.CombinedOutput()
+	fmt.Println("output", string(output))
+	if err != nil {
+		return "", err
+	}
+	return string(output), nil
+}
+
+func ExecDeploySite(context, siteName, epochs, sitePath string) (string, error) {
+	binaryPath := getSiteBuilderBinaryPath()
+	userDataPath, cErr := GetUserDataPath()
+	if cErr != nil {
+		return "", cErr
+	}
+
+	cmd := exec.Command(
+		binaryPath,
+		"--config", "config/sites-config.yaml",
+		"--context", context,
+		"publish",
+		"--site-name", siteName,
+		"--epochs", epochs,
+		sitePath,
+	)
+	cmd.Dir = userDataPath
+	fmt.Println("cmd.Dir", cmd.Dir)
+	output, err := cmd.CombinedOutput()
+	fmt.Println("output", string(output))
+	if err != nil {
+		return "", err
+	}
+	return string(output), nil
+}
+
+func ExecUpdateSite(context, siteName, epochs, sitePath, objectID string) (string, error) {
+	binaryPath := getSiteBuilderBinaryPath()
+	userDataPath, cErr := GetUserDataPath()
+	if cErr != nil {
+		return "", cErr
+	}
+
+	cmd := exec.Command(
+		binaryPath,
+		"--config", "config/sites-config.yaml",
+		"--context", context,
+		"update",
+		"--site-name", siteName,
+		"--epochs", epochs,
+		sitePath,
+	)
+	cmd.Dir = userDataPath
+	fmt.Println("cmd.Dir", cmd.Dir)
+	output, err := cmd.CombinedOutput()
+	fmt.Println("output", string(output))
 	if err != nil {
 		return "", err
 	}

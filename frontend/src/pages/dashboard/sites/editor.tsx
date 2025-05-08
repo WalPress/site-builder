@@ -48,11 +48,12 @@ const EditorPage: React.FC = () => {
     setIsDeployModalOpen(true);
   };
 
-  const handleFinalDeploy = (epoch: string) => {
-    console.log('Final Deploy Confirmed! Epoch:', epoch, 'Content:', editorData);
-    // Add actual deployment logic here, using epoch and editorData
-    // setIsDeployModalOpen(false); // Modal closes itself now
-  };
+  // const handleFinalDeploy = (epoch: string) => {
+  //   console.log('Final Deploy Confirmed! Epoch:', epoch, 'Content:', editorData);
+  //   // Add actual deployment logic here, using epoch and editorData
+  //   // setIsDeployModalOpen(false); // Modal closes itself now
+  // };
+
   console.log('Current Site:', currentSite);
 
   const handleSave = async () => {
@@ -117,8 +118,8 @@ const EditorPage: React.FC = () => {
           )}
         </div>
         <div className="flex justify-end gap-3">
-          <Button variant="primary" onClick={handleDeployClick} disabled={isLoading || isUploading}>
-            {isDeploying ? 'Deploying...' : 'Deploy'}
+          <Button variant="primary" onClick={handleDeployClick} disabled={isLoading || isUploading || isDeploying}>
+            {currentSite?.published ? isDeploying ? 'Updating...' : 'Update' : isDeploying ? 'Deploying...' : 'Deploy'}
           </Button>
           <Button variant="secondary" onClick={handleSave} disabled={isLoading || isSaving || isUploading}>
             {(isSaving) ? 'Saving...' : isUploading ? 'Uploading...' : 'Save'}
@@ -135,8 +136,8 @@ const EditorPage: React.FC = () => {
       <DeploymentModal 
         isOpen={isDeployModalOpen} 
         onClose={handleCloseModal}
-        onFinalDeploy={handleFinalDeploy}
         siteName={currentSite?.name || ''}
+        siteId={currentSite?.id || ''}
       />
     </>
   );
