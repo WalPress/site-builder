@@ -6,12 +6,12 @@ interface LinkStep1Props {
   onContinue: () => void;
   onCancel: () => void;
   selectedNs: any;
+  selectedSiteId: string | undefined;
   sites: SiteStruct[];
+  selectSite: (siteId: string) => void;
 }
 
-const LinkStep1: React.FC<LinkStep1Props> = ({ onContinue, onCancel, sites }) => {
-
-
+const LinkStep1: React.FC<LinkStep1Props> = ({ onContinue, onCancel, sites, selectSite, selectedSiteId }) => {
   return (
     <div className="p-2 w-full max-w-md">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Connect your SUI NS to your website</h2>
@@ -23,8 +23,8 @@ const LinkStep1: React.FC<LinkStep1Props> = ({ onContinue, onCancel, sites }) =>
         {sites.map((link) => (
           <div 
             key={link.id} 
-            className="p-3 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-            // Add selection logic here if needed, e.g., onClick={() => setSelectedLink(link.id)}
+            className={`p-3 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer ${selectedSiteId === link.id ? 'bg-gray-200 dark:bg-gray-700' : ''}`}
+            onClick={() => selectSite(link.id)}
           >
             <p className="font-medium text-gray-800 dark:text-gray-200">{link.name}</p>
             <p className="text-xs text-blue-500 dark:text-blue-400 break-all">{link.status}</p>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { NewWalletResponse, Wallet, WalletStruct } from "../types/wallet";
 import { FetchWallets, GenerateWallet, SwitchAddress } from "../../wailsjs/go/src/app";
@@ -8,20 +8,25 @@ const useWallet = () => {
     const { activeWallet, setAuthToken } = useAccount();
     const navigate = useNavigate();
     const [isFetchingWallets, setIsFetchingWallets] = useState(true);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isSwitching, setIsSwitching] = useState(false);
     const [newWallet, setNewWallet] = useState<NewWalletResponse>({} as NewWalletResponse);
     const [existingWallets, setExistingWallets] = useState<WalletStruct>({} as WalletStruct);
 
     const generateWallet = async () => {
+        setIsGenerating(true);
         const result = await GenerateWallet();
+        console.log("result", result);
         setNewWallet(result);
+        setIsGenerating(false);
     }
 
     const handleContinue = async (address: string) => {
-        console.log('handleContinue', address)
+        setIsSwitching(true);
         // call switch address
-        const result = await SwitchAddress(address);
-        console.log('result', result)
+        await SwitchAddress(address);
         setAuthToken(address);
+        setIsSwitching(false);
         return navigate('/app');
     }
 
@@ -51,9 +56,9 @@ const useWallet = () => {
       e.preventDefault(); // Prevent default link behavior
     };
 
-    return {
-        newWallet, setNewWallet, generateWallet, fetchWallets, existingWallets, selectWallet, handleContinue, handleWalletImport, isFetchingWallets, activeWallet
-    }
+    return useMemo(() => ({
+        newWallet, setNewWallet, generateWallet, fetchWallets, existingWallets, selectWallet, handleContinue, handleWalletImport, isFetchingWallets, activeWallet, isGenerating, isSwitching
+    }), [newWallet, existingWallets, isGenerating, isSwitching]);
 }
 
 export default useWallet;

@@ -41,7 +41,7 @@ const useSite = () => {
     const fetchSites = async () => {
         setIsLoading(true);
         try {
-            const response = await ListSites();
+            const response = await ListSites(activeWallet);
             if (response && response.length > 0) {
                 setSites(response.map((site) => ({
                     id: site.id.toString(),
@@ -71,48 +71,71 @@ const useSite = () => {
     }
 
     const updateSite = async (id: string, name: string, content: string) => {
-        setIsSaving(true);
-        const response = await UpdateSite(id, name, content);
-        setIsSaving(false);
-        await getSite(id);
-        return response;
+        try {
+            setIsSaving(true);
+            const response = await UpdateSite(id, name, content);
+            setIsSaving(false);
+            await getSite(id);
+            return response;
+        } catch (err) {
+            setError(err as string);
+            setIsSaving(false);
+            throw err;
+        }
     }
 
     const getSite = async (id: string) => {
-        const response = await GetSite(id);
-        setCurrentSite({
-            id: response.id.toString(),
-            name: response.name,
-            content: response.content,
-            blobId: response.blob_id,
-            objectId: response.object_id,
-            address: response.address,
-            status: response.status,
-            published: response.published,
-            publishedAt: response.published_at,
-            createdAt: response.created_at,
-            updatedAt: response.updated_at,
-        });
+        try {
+            const response = await GetSite(id);
+            setCurrentSite({
+                id: response.id.toString(),
+                name: response.name,
+                content: response.content,
+                blobId: response.blob_id,
+                objectId: response.object_id,
+                address: response.address,
+                status: response.status,
+                published: response.published,
+                publishedAt: response.published_at,
+                createdAt: response.created_at,
+                updatedAt: response.updated_at,
+            });
+        } catch (err) {
+            setError(err as string);
+            throw err;
+        }
     }
 
     const deleteSite = async (id: string) => {
-        setIsDeleting(true);
-        const response = await DeleteSite(id);
-        await fetchSites();
-        setIsDeleting(false);
-        return response;
+        try {
+            setIsDeleting(true);
+            const response = await DeleteSite(id);
+            await fetchSites();
+            setIsDeleting(false);
+            return response;
+        } catch (err) {
+            setError(err as string);
+            setIsDeleting(false);
+            throw err;
+        }
     }
 
     const deploySite = async (siteId: string, epoch: number) => {
-        setIsDeploying(true);
-        console.log("Deploying site:", epoch, currentNetwork);
-        if (!siteId) {
-            throw new Error("No site selected");
+        try {
+            setIsDeploying(true);
+            console.log("Deploying site:", epoch, currentNetwork);
+            if (!siteId) {
+                throw new Error("No site selected");
+            }
+            const response = await DeploySite(siteId, epoch, "mainnet");
+            console.log("Deployed site:", response);
+            setIsDeploying(false);
+            return response;
+        } catch (err) {
+            setError(err as string);
+            setIsDeploying(false);
+            throw err;
         }
-        const response = await DeploySite(siteId, epoch, "mainnet");
-        console.log("Deployed site:", response);
-        setIsDeploying(false);
-        return response;
     }
 
     const handleFileUpload = async (file: File, siteId: string): Promise<string> => {
@@ -190,8 +213,13 @@ const useSite = () => {
     };
 
     const estimateStorageCost = async (siteId: string, epoch: number) => {
-        const response = await EstimateStorageCost(siteId, epoch, currentNetwork);
-        return response;
+        try {
+            const response = await EstimateStorageCost(siteId, epoch, currentNetwork);
+            return response;
+        } catch (err) {
+            setError(err as string);
+            throw err;
+        }
     }
 
     return {

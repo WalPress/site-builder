@@ -65,8 +65,8 @@ func Get(db *sql.DB, id uuid.UUID) (Site, error) {
 }
 
 // List lists all sites
-func List(db *sql.DB) ([]Site, error) {
-	rows, err := db.Query("SELECT id, name, content, address, published, object_id, blob_id, status, linked, published_at, created_at, updated_at FROM sites ORDER BY created_at DESC")
+func List(db *sql.DB, address string) ([]Site, error) {
+	rows, err := db.Query("SELECT id, name, content, address, published, object_id, blob_id, status, linked, published_at, created_at, updated_at FROM sites WHERE address = $1 ORDER BY created_at DESC", address)
 	if err != nil {
 		return nil, err
 	}

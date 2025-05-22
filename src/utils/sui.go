@@ -54,14 +54,14 @@ func RunSuiCommand(command string) (interface{}, error) {
 	binaryPath := getSuiBinaryPath()
 	configPath := getConfigPath()
 	rawCommand := fmt.Sprintf("client --client.config client.yaml -y %s --json", command)
-	fmt.Println(binaryPath, rawCommand)
+
 	args := strings.Fields(rawCommand)
-	fmt.Println("args", args)
+
 	jsonOutput, err := RunCliCommandWithoutCtx(binaryPath, &RunCliCommandOptions{Cwd: filepath.Dir(configPath)}, args...)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("jsonOutput", string(jsonOutput))
+
 	clean := filterWarnings(string(jsonOutput))
 
 	var data = map[string]interface{}{}
@@ -79,13 +79,12 @@ func RunSuiCommandParsed(command string, interfaceType interface{}) (interface{}
 	rawCommand := fmt.Sprintf("client --client.config client.yaml -y %s --json", command)
 	fmt.Println(binaryPath, rawCommand)
 	args := strings.Fields(rawCommand)
-	fmt.Println("args", args)
+
 	jsonOutput, err := RunCliCommandWithoutCtx(binaryPath, &RunCliCommandOptions{Cwd: filepath.Dir(configPath)}, args...)
 	if err != nil {
 		return nil, err
 	}
 	clean := filterWarnings(string(jsonOutput))
-	fmt.Println("jsonOutput", string(clean))
 
 	err = json.Unmarshal([]byte(clean), &interfaceType)
 	if err != nil {
@@ -177,7 +176,6 @@ func ExtractIDs(response string) (string, string, error) {
 func RunSuiCommandKeytoolExport(address string) (interface{}, error) {
 	binaryPath := getSuiBinaryPath()
 	configPath := getConfigPath()
-	fmt.Println("address--->", address)
 	cmd := exec.Command(
 		binaryPath,
 		"keytool",
@@ -197,7 +195,7 @@ func RunSuiCommandKeytoolExport(address string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("jsonOutput", string("output"))
+
 	clean := filterWarnings(string(output))
 
 	var data = map[string]interface{}{}
@@ -207,4 +205,48 @@ func RunSuiCommandKeytoolExport(address string) (interface{}, error) {
 	}
 
 	return data, nil
+}
+
+// ExtractIDs extracts all Object IDs and Blob IDs from the given CLI response.
+func ExtractUpdateIDs(response string) ([]string, []string, error) {
+	// Regular expression to match 64-character hex Object IDs
+	// objectIDRegex := regexp.MustCompile(`0x[a-f0-9]{64}`)
+	objectIDRegex := regexp.MustCompile(`Site object ID:\s*(0x[a-f0-9]{64})`)
+	// Regular expression to match 43-character base64-like Blob IDs
+	blobIDRegex := regexp.MustCompile(`with blob ID\s*([A-Za-z0-9-_]{43})`)
+
+	// Extract all matches
+	objectIDs := objectIDRegex.FindAllString(response, -1)
+	blobIDs := blobIDRegex.FindAllString(response, -1)
+
+	return objectIDs, blobIDs, nil
+}
+
+func AddALLEnvironments() {
+	AddEnvironment("mainnet", "https://fullnode.mainnet.sui.io:443")
+}
+
+func AddEnvironment(env string, url string) {
+	binaryPath := getSuiBinaryPath()
+	configPath := getConfigPath()
+
+	cmd := exec.Command(
+		binaryPath,
+		"client",
+		"--client.config",
+		configPath,
+		"-y",
+		"new-env",
+		"--alias",
+		env,
+		"--rpc",
+		url,
+		"--json",
+	)
+	cmd.Dir = filepath.Dir(configPath)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("error", err)
+	}
+	fmt.Println("output", string(output))
 }

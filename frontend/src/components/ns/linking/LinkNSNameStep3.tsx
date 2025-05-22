@@ -3,17 +3,17 @@ import Button from '../../Button'; // Assuming Button is in ../components
 import { Copy, CheckCircle } from 'lucide-react'; // Added CheckCircle for success indication
 
 interface LinkNSNameStep3Props {
-  onFinish: () => void; // Changed from onClose to onFinish for clarity
-  onBack?: () => void;   // Optional Back button for this step
-  blobId?: string;    // Made optional, provide placeholder
-  objectId?: string;  // Made optional, provide placeholder
+  onFinish: () => void;
+  onBack?: () => void;
+  objectId?: string;
+  txId?: string;
 }
 
 const LinkNSNameStep3: React.FC<LinkNSNameStep3Props> = ({
   onFinish,
   onBack,
-  blobId = "bafk...eid", // Placeholder
-  objectId = "0x123...abc", // Placeholder
+  objectId,
+  txId,
 }) => {
   return (
     <div className="p-6 bg-white dark:bg-gray-800 rounded-lg w-full max-w-sm text-center">
@@ -23,14 +23,14 @@ const LinkNSNameStep3: React.FC<LinkNSNameStep3Props> = ({
         Your request to link the name to your site has been submitted. It may take a few moments to reflect.
       </p>
 
-      {(blobId || objectId) && (
+      {objectId && (
         <div className="bg-gray-100 dark:bg-gray-700 rounded p-4 mb-8 text-sm text-left space-y-2">
-          {blobId && (
+          {txId && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-700 dark:text-gray-300">Blob ID:</span>
+              <span className="text-gray-700 dark:text-gray-300">Transaction ID:</span>
               <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-900 dark:text-white break-all truncate w-32" title={blobId}>{blobId}</span>
-                <Copy size={16} className="cursor-pointer hover:text-blue-500 shrink-0" onClick={() => navigator.clipboard.writeText(blobId)} />
+                <span className="font-medium text-gray-900 dark:text-white break-all truncate w-32" title={txId}>{txId}</span>
+                <Copy size={16} className="cursor-pointer hover:text-blue-500 shrink-0" onClick={() => navigator.clipboard.writeText(txId)} />
               </div>
             </div>
           )}

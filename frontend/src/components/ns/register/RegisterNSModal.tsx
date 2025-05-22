@@ -21,7 +21,9 @@ const RegisterNSModal: React.FC<RegisterNSModalProps> = ({
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [registrationTxId, setRegistrationTxId] = useState<string | undefined>(undefined);
-  const { registerNs, searchNs } = useNsNames();
+  const { registerNs, searchNs, getSettingsValues } = useNsNames();
+
+  const { gasBudget, pricePerYear } = getSettingsValues();
 
   const handleStep1Register = (domain: string, duration: number) => {
     console.log("Step 1 Register:", domain, duration);
@@ -111,6 +113,8 @@ const RegisterNSModal: React.FC<RegisterNSModalProps> = ({
           isProcessing={isProcessing}
           domainName={domainToRegister}
           durationYears={durationToRegister} // Pass actual duration label if needed
+          estimatedCost={pricePerYear * durationToRegister}
+          transactionFee={gasBudget}
           // Pass actual cost and fee data
         />
       );

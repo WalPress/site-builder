@@ -23,8 +23,8 @@ type uploadSession struct {
 	Started        time.Time // For potential cleanup logic
 }
 
-func (a *App) ListSites() ([]site.Site, error) {
-	return site.List(a.db)
+func (a *App) ListSites(address string) ([]site.Site, error) {
+	return site.List(a.db, address)
 }
 
 func (a *App) GetSite(id uuid.UUID) (site.Site, error) {
@@ -392,20 +392,20 @@ func (a *App) DeploySite(siteID uuid.UUID, epoch int64, activeNetwork string) (i
 		if err != nil {
 			return nil, fmt.Errorf("failed to run site builder command: %w", err)
 		}
-		objectID, blobID, err := utils.ExtractIDs(siteBuilderOutput)
+		objectID, blobID, err := utils.ExtractUpdateIDs(siteBuilderOutput)
 		fmt.Println("objectID-->", objectID, "blobID", blobID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to extract IDs: %w", err)
 		}
 
-		err = site.UpdateSiteStorage(a.db, siteID, objectID, blobID)
+		err = site.UpdateSiteStorage(a.db, siteID, objectID[0], blobID[0])
 		if err != nil {
 			runtime.LogError(a.ctx, fmt.Sprintf("Failed to update site record for ID %s: %v", siteID, err))
 			return nil, fmt.Errorf("failed to update site record: %w", err)
 		}
 		return map[string]string{
-			"objectId": objectID,
-			"blobId":   blobID,
+			"objectId": objectID[0],
+			"blobId":   blobID[0],
 		}, nil
 	} else {
 		siteName := currentSite.Name

@@ -51,9 +51,9 @@ const MySitesPage: React.FC = () => {
 
       {/* Cards Grid */}
       <div className="relative flex flex-col overflow-y-auto h-[75vh]">
-        {isLoading && <Loader />}
-        {error && <div className="col-span-full">Error: {error as string}</div>}
-        {sites.length === 0 && <div className="flex items-center justify-center w-full h-full">
+        {isLoading && <Loader size={28} />}
+        {!isLoading && error && <div className="col-span-full">Error: {error as string}</div>}
+        {!isLoading && sites.length === 0 && <div className="flex items-center justify-center w-full h-full">
           <div className="bg-card text-card-foreground rounded-lg shadow-md p-8 items-center justify-center text-center w-full h-full">
             <div className="flex flex-col items-center justify-center w-full h-full">
               <div className="mb-4 text-4xl"><TowerControlIcon size={48} /></div>
@@ -68,7 +68,7 @@ const MySitesPage: React.FC = () => {
           </div>
         </div>}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sites.map((site) => (
+          {!isLoading && sites.map((site) => (
             <SiteCard
               key={site.id}
               id={site.id}

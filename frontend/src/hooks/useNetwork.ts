@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { GetAllNetworks, SwitchNetwork } from "../../wailsjs/go/src/app";
 
 const useNetwork = () => {
@@ -18,6 +18,10 @@ const useNetwork = () => {
         setCurrentNetwork(activeNetwork);
         setIsLoading(false);
     }
+
+    useEffect(() => {
+        getNetworks();
+    }, []);
 
     const switchNetwork = async (network: string) => {
         setIsSwitching(true);
@@ -41,7 +45,9 @@ const useNetwork = () => {
         return allNetworks;
     }
 
-    return { networks, getNetworks, switchNetwork, flattenNetworks, currentNetwork, isLoading, isSwitching };
+    console.log("networks", networks,currentNetwork);
+
+    return useMemo(() => ({ networks, getNetworks, switchNetwork, flattenNetworks, currentNetwork, isLoading, isSwitching }), [networks, currentNetwork, isLoading, isSwitching]);
 }
 
 export default useNetwork;

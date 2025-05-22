@@ -7,10 +7,10 @@ interface RegisterStep2Props {
   onBack: () => void;
   onCancel: () => void;
   isProcessing?: boolean;
-  domainName?: string; // To display the name being registered
-  durationYears?: number; // To display selected duration
-  estimatedCost?: number; // Placeholder for cost
-  transactionFee?: number; // Placeholder for fee
+  domainName: string; // To display the name being registered
+  durationYears: number; // To display selected duration
+  estimatedCost: number; // Placeholder for cost
+  transactionFee: number; // Placeholder for fee
 }
 
 const RegisterStep2: React.FC<RegisterStep2Props> = ({
@@ -20,8 +20,8 @@ const RegisterStep2: React.FC<RegisterStep2Props> = ({
   isProcessing = false,
   domainName = "yourname.sui", // Placeholder
   durationYears = 1, // Placeholder
-  estimatedCost = 10, // Placeholder SUI or token amount
-  transactionFee = 0.01, // Placeholder SUI
+  estimatedCost,
+  transactionFee,
 }) => {
   return (
     <div className="p-6 bg-white dark:bg-gray-800 rounded-lg w-full text-center">

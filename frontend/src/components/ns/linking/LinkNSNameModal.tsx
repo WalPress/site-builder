@@ -4,6 +4,7 @@ import LinkNSNameStep2 from './LinkNSNameStep2';
 import LinkNSNameStep3 from './LinkNSNameStep3';
 import Modal from '../../Modal';
 import useSite from '../../../hooks/useSite';
+import useNsNames from '../../../hooks/useNsNames';
 
 interface LinkNSNameModalProps {
   isOpen: boolean;
@@ -17,37 +18,45 @@ const LinkNSNameModal: React.FC<LinkNSNameModalProps> = ({ isOpen, onClose, sele
 
   // Placeholder states for step 2 and 3 data - manage these based on actual needs
   const [isProcessing, setIsProcessing] = useState(false);
-  const [finalBlobId, setFinalBlobId] = useState<string | undefined>(undefined);
+  const [finalTxId, setFinalTxId] = useState<string | undefined>(undefined);
   const [finalObjectId, setFinalObjectId] = useState<string | undefined>(undefined);
+  const [selectedSiteId, setSelectedSiteId] = useState<string | undefined>(undefined);
   const { sites, fetchSites } = useSite();  
-  console.log("selectedNs", selectedNs, isOpen);
-
+  const { LinkNsName } = useNsNames();
+  
   useEffect(() => {
     fetchSites();
   }, []);
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (currentStep === 1) {
       // Logic for step 1 continue: e.g., validate selection
       setCurrentStep(2);
     } else if (currentStep === 2) {
-      // Logic for step 2 continue: e.g., initiate linking process
       setIsProcessing(true);
+      const selectedSite = sites.find((site: any) => site.id === selectedSiteId);
+      console.log("selectedSiteId", selectedSiteId, sites, selectedSite);
+      const objectId = selectedSite?.objectId?.match(/0x[a-fA-F0-9]{64}/)?.[0];
+      console.log(objectId, selectedNs);
+      if (!objectId) {
+        console.log("No objectId found || invalid object-id selected");
+        return;
+      }
+      const res = await LinkNsName(selectedNs.objectId, objectId); 
+      console.log("res", res);
+      setFinalTxId(res.digest);
       // Simulate API call
       setTimeout(() => {
-        setFinalBlobId("bafy...beid_final"); // Example data from linking process
-        setFinalObjectId("0xabc...def_final"); // Example data from linking process
+        setFinalObjectId(objectId);
         setIsProcessing(false);
         setCurrentStep(3);
       }, 1500);
     }
   };
 
-  // const handlePreviousStep = () => {
-  //   if (currentStep > 1) {
-  //     setCurrentStep(currentStep - 1);
-  //   }
-  // };
+  const handleSelectSite = (siteId: string) => {
+    setSelectedSiteId(siteId);
+  }
 
   const handleFinish = () => {
     onClose(); // Close modal on finish
@@ -72,25 +81,24 @@ const LinkNSNameModal: React.FC<LinkNSNameModalProps> = ({ isOpen, onClose, sele
             onCancel={handleCancel} 
             selectedNs={selectedNs}
             sites={sites}
+            selectSite={handleSelectSite}
+            selectedSiteId={selectedSiteId}
           />
         )}
         {currentStep === 2 && (
           <LinkNSNameStep2 
             onContinue={handleNextStep} 
-            // onBack={handlePreviousStep} 
             onCancel={handleCancel} 
             isProcessing={isProcessing}
             storageCost={0.5}
             transactionFee={0.01}
-            // Pass actual storageCost and transactionFee if available
           />
         )}
         {currentStep === 3 && (
           <LinkNSNameStep3 
-            onFinish={handleFinish} 
-            // onBack={handlePreviousStep} // Can enable if back from success is needed
-            blobId={finalBlobId}
+            onFinish={handleFinish}
             objectId={finalObjectId}
+            txId={finalTxId}
           />
         )}
     </Modal>

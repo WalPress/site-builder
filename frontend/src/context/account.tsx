@@ -6,9 +6,8 @@ import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
 import { SplashScreen } from '../components/loader';
 // import the backend app
-import { CheckUserAuth, GetPrivateKey } from '../../wailsjs/go/src/app';
+import { CheckUserAuth, GetPrivateKey, Logout } from '../../wailsjs/go/src/app';
 import { sleep } from '../utils';
-
 
 interface AccountContextProps {
   activeWallet: string;
@@ -26,14 +25,19 @@ const AccountContext = createContext<AccountContextProps | undefined>(undefined)
  */
 export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Initial state setup
-  const cookieToken = Cookies.get('address');
+  // const cookieToken = Cookies.get('address');
   const navigate = useNavigate();
   const { pathname } = useLocation();
   
-  const [activeWallet, setActiveWallet] = useState<string>(cookieToken as string);
+  const [activeWallet, setActiveWallet] = useState<string>();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);  
+
 
   const checkAuth = async () => {
     if (isAuthenticated) return;
@@ -42,8 +46,7 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
         const response = await CheckUserAuth();
         if (response.appReady) {
           if (response.auth) {
-            await getPrivateKey();
-            setAuthToken(response.address);
+            setAuthToken(response.address.trim());
             if (authRoutes.includes(pathname)) {
               navigate("/app");
             }
@@ -59,39 +62,51 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
           checkAuth();
         }
     } catch (error) {
-        setError(error as Error); 
-        if (!authRoutes.includes(pathname)) {
-            navigate("/");
-        }
-        setIsLoading(false);
+      setError(error as Error); 
+      if (!authRoutes.includes(pathname)) {
+          navigate("/");
+      }
+      setIsLoading(false);
     } 
-}
-
-  useEffect(() => {
-    checkAuth();
-  }, []);  
+  }
 
   const setAuthToken = (token: string) => {
     Cookies.set('address', token);
     setIsAuthenticated(true);
+    token.trim();
     setActiveWallet(token);
   }
 
   const getPrivateKey = async () => {
-    const response = await GetPrivateKey(activeWallet);
-    const keypair = Ed25519Keypair.fromSecretKey(response.exportedPrivateKey);
-    setActiveWallet(keypair.toSuiAddress());
-    return response.exportedPrivateKey;
+    try {
+      console.log("getPrivateKey activeWallet:", activeWallet);
+      const response = await GetPrivateKey(activeWallet as string);
+      console.log("GetPrivateKey response:", response);
+      const keypair = Ed25519Keypair.fromSecretKey(response.exportedPrivateKey);
+      setActiveWallet(keypair.toSuiAddress());
+      return response.exportedPrivateKey;
+    } catch (error) {
+      setError(error as Error);
+      // throw error;
+    }
   }
 
   /**
    * Logout the user
    */
-  const logout = () => {
-    Cookies.remove('address');
-    setIsAuthenticated(false);
-    setActiveWallet('');
-    navigate('/');
+  const logout = async() => {
+    try {
+      Cookies.remove('address');
+      setIsAuthenticated(false);
+      const response = await Logout();
+      console.log('Logout response:', response);
+      if (response === "success") {
+        setActiveWallet('');
+        navigate('/');
+      }
+    } catch (error) {
+      setError(error as Error);
+    }
   };
 
   if (isLoading) {
@@ -111,7 +126,7 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
   return (
     <AccountContext.Provider
       value={{
-        activeWallet,
+        activeWallet: activeWallet as string,
         setAuthToken,
         getPrivateKey,
         logout,

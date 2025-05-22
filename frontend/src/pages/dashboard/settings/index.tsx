@@ -1,13 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiHelpCircle, FiEdit2, FiCheck } from 'react-icons/fi';
-import Button from '../../../components/Button';
 import useSetting from '../../../hooks/useSetting';
-import { useAccount } from '../../../context/account';
-import { Copy } from 'lucide-react';
-import { GetTestnetToken } from '../../../../wailsjs/go/src/app';
-import SettingSelectRow from '../../../components/SettingSelectRow';
-import useBalance from '../../../hooks/useBalance';
-import useNetwork from '../../../hooks/useNetwork';
+import { Loader } from '../../../components/loader';
 
 // Reusable component for a setting input row
 interface SettingInputRowProps {
@@ -90,22 +84,15 @@ const SettingInputRow: React.FC<SettingInputRowProps> = ({ label, helpText, defa
 };
 
 const SettingsPage: React.FC = () => {
-  const { settings, getSettings } = useSetting();
-  const { activeWallet } = useAccount();
-  const { balance, getBalance } = useBalance();
-  const { networks, getNetworks, switchNetwork, currentNetwork, isSwitching } = useNetwork();
-  const [currentGas, setCurrentGas] = useState(settings?.gas || "3");
-
-  const getTestnetToken = async () => {
-    const response = await GetTestnetToken();
-    console.log(response);
-  }
+  const { settings, setSetting, getSettings, loading } = useSetting();
 
   useEffect(() => {
     getSettings();
-    getBalance();
-    getNetworks();
   }, []);
+  console.log("settings-page", settings);
+  if (loading) {
+    return <div><Loader size={28} /></div>
+  }
 
   return (
     <main className="p-6 flex flex-col flex-1 bg-background">
@@ -119,41 +106,25 @@ const SettingsPage: React.FC = () => {
 
       {/* Settings Form Area - Limit width */}
       <div className="max-w-lg space-y-6">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Wallet Address:
-          </p>
-          <div className="flex items-center gap-2">
-            <p className="bg-gray-300 dark:bg-gray-800 p-2 rounded-md text-sm text-gray-600 dark:text-gray-400 w-full break-all">
-              {activeWallet}
-            </p>
-            <Copy className="w-4 h-4 cursor-pointer hover:text-green-500 dark:hover:text-green-400" onClick={() => {
-              navigator.clipboard.writeText(activeWallet);
-            }} />
-          </div>
-          <div className="flex items-center gap-2">
-            <p className="bg-gray-300 dark:bg-gray-800 p-2 rounded-md text-sm text-gray-600 dark:text-gray-400 w-full break-all">
-              {JSON.stringify(balance)}
-            </p>
-          </div>
-          <Button variant="primary" onClick={getTestnetToken}>
-            Get Testnet Token
-          </Button>
-        </div>
         <SettingInputRow 
           label="Set maximum gas fee spend"
           helpText="What is a gas fee?"
-          defaultValue={currentGas}
-          setCurrentValue={setCurrentGas}
+          defaultValue={settings?.gas || "0.001"}
+          setCurrentValue={(value) => {
+            setSetting({
+              gas: value,
+            });
+          }}
+
         />
-        <SettingSelectRow 
+        {/* <SettingSelectRow 
           label="Set RPC Endpoint"
           helpText="What is RPC?"
           currentValue={currentNetwork}
           setCurrentValue={switchNetwork}
           options={networks}
           disabled={isSwitching}
-        />
+        /> */}
 
         {/* Submit Button */}
         {/* <div className="pt-4">
@@ -162,7 +133,6 @@ const SettingsPage: React.FC = () => {
             onClick={() => {
               setSetting({
                 gas: currentGas,
-                rpc: currentRpc,
               });
             }}
           >

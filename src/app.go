@@ -98,6 +98,10 @@ func (a *App) doInitialSetup() {
 		}
 	}
 
+	utils.AddALLEnvironments()
+
+	wallet.SwitchNetwork(a.db, "mainnet")
+
 	a.mu.Lock()
 	a.ready = true
 	a.installing = false
@@ -172,5 +176,6 @@ func (a *App) Logout() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to logout: " + err.Error())
 	}
+	runtime.LogInfo(a.ctx, "Logged out successfully")
 	return "success", nil
 }

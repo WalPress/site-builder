@@ -74,7 +74,7 @@ const SuiNsManagerPage: React.FC = () => {
     setSelectedNs(ns);
     setIsRenewingModalOpen(true);
   }
-  
+
   return (
     <main className="p-6 flex flex-col flex-1 bg-background">
       {/* Page Header */}
@@ -133,9 +133,7 @@ const SuiNsManagerPage: React.FC = () => {
           </div>
         </div>
         {/* Table */}
-        {isLoading && <Loader />}
-        {/* {!isLoading && activeTab === 'Linked NS' && ( */}
-        {!isLoading && (
+        {/* {!isLoading && activeTab === 'Linked NS' && ( */}        
           <div className="overflow-x-auto">
             <table className="w-full mt-4 text-sm text-left text-gray-700 dark:text-gray-300">
               <thead className="text-xs text-gray-900 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700">
@@ -147,7 +145,7 @@ const SuiNsManagerPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {nsNames.map((item, index) => (
+                {!isLoading && nsNames.map((item, index) => (
                   <tr key={index} className="bg-white dark:bg-gray-800 text-gray-500 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <td className="px-6 py-2 font-medium  dark:text-white whitespace-nowrap">{item.name}</td>
                     <td className="px-6 py-2">{GetRegistrationDate(item.expiry)}</td>
@@ -167,17 +165,19 @@ const SuiNsManagerPage: React.FC = () => {
                     </td>
                   </tr>
                 ))}
-                {nsNames.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="text-center">
-                      No NS Record found.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
-        )}
+            {isLoading && 
+              <div className="flex justify-center items-center mt-16">
+                <Loader size={28} />
+              </div>
+            }
+            {!isLoading && nsNames.length === 0 && (
+              <div className="flex justify-center items-center mt-16">
+                  No NS Record found.
+              </div>
+            )}
          {/* {!isLoading && activeTab === 'Unlinked NS' && (
            <div className="text-center py-10 text-gray-500 dark:text-gray-400">
              No unlinked NS found.

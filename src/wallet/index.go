@@ -15,7 +15,7 @@ import (
 // GenerateWallet generates a new wallet
 func GenerateWallet() (interface{}, error) {
 	randomName := "walpress-" + uuid.New().String()
-	out, err := utils.RunSuiCommand("new-address secp256k1 " + randomName)
+	out, err := utils.RunSuiCommand("new-address ed25519 " + randomName)
 	fmt.Println("out", out, "err", err)
 	if err != nil {
 		log.Fatalf("Failed to generate local wallet: " + err.Error())
@@ -48,10 +48,20 @@ func CheckUserAuth() (string, error) {
 		fmt.Println("no active address found: " + err.Error())
 		return "", fmt.Errorf("no active address found: " + err.Error())
 	}
+	fmt.Println("CheckUserAuth out:", out)
 	return out, nil
 }
 
 func SwitchAddress(db *sql.DB, address string) (interface{}, error) {
+	fmt.Println("Switching address to:", address)
+	activeAddress, err := CheckUserAuth()
+	if err == nil {
+		fmt.Println("activeAddress", activeAddress)
+		if activeAddress == address {
+			settings.CreateOrUpdate(db, utils.IS_AUTHENTICATED, "true")
+			return nil, nil
+		}
+	}
 	out, err := utils.RunSuiCommand("switch --address " + address)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set active address: " + err.Error())

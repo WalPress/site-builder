@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import useWallet from '../../hooks/useWallet';
 import { CheckCircle, ChevronRight } from 'lucide-react';
 import { Loader } from '../loader';
@@ -9,17 +9,19 @@ interface SelectWalletProfileProps {
 }
 
 const SelectWalletProfileComponent: React.FC<SelectWalletProfileProps> = ({ onImportClick }) => {
-  const { existingWallets, isFetchingWallets, activeWallet, fetchWallets, selectWallet } = useWallet();
+  const { isSwitching, existingWallets, isFetchingWallets, activeWallet, fetchWallets, selectWallet } = useWallet();
+  const [clickedProfile, setClickedProfile] = useState<string | null>(activeWallet);
 
   useEffect(() => {
       fetchWallets();
+      setClickedProfile(activeWallet);
   }, []);
   
   return (
     <div className="mt-8 text-center space-y-4 w-[400px] scrollbar-hide">
       <h2 className="text-xl font-semibold text-foreground">Select existing profile</h2>
       <p className="text-sm text-muted-foreground px-4">
-        Lorem ipsum dolor sit amet consectetur. In metus mattis magna lacus. Integer quis ut id urna vulputate in odio ut.
+        Select an existing profile to continue.
       </p>
 
       {/* Available Profile Row */}
@@ -29,6 +31,7 @@ const SelectWalletProfileComponent: React.FC<SelectWalletProfileProps> = ({ onIm
           href="#" 
           onClick={onImportClick} // Use the updated handler
           className="text-primary hover:underline font-medium"
+          // disabled={isSwitching || isGenerating}
         >
           Import new Wallet →
         </a>
@@ -41,10 +44,13 @@ const SelectWalletProfileComponent: React.FC<SelectWalletProfileProps> = ({ onIm
         )}
 
         {!isFetchingWallets && (existingWallets?.addresses || []).map((wallet) => (
-          <div className="p-3 border-b border-border bg-background rounded-md mb-2 hover:bg-muted/80 cursor-pointer flex justify-between items-center" onClick={() => selectWallet(wallet)}>
+          <div className="p-3 border-b border-border bg-background rounded-md mb-2 hover:bg-muted/80 cursor-pointer flex justify-between items-center" onClick={() => {
+            setClickedProfile(wallet.address);
+            selectWallet(wallet);
+          }}>
             <span className="font-medium text-foreground">{wallet.name} - ({wallet.address.slice(0, 5)}...)</span>
             <span className="flex items-center gap-2 text-muted-foreground text-xs"> 
-              {wallet.address === activeWallet && <CheckCircle className="w-4 h-4" />}
+              {clickedProfile === wallet.address && ( isSwitching ? <Loader className="animate-spin text-muted-foreground" size={15} /> : <CheckCircle className="w-4 h-4" />)}
               <ChevronRight className="w-4 h-4" />
             </span>
           </div>

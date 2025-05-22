@@ -5,7 +5,7 @@ BUILD_PATH="./build/bin/$APP_NAME.app"
 MACOS_BIN="$BUILD_PATH/Contents/MacOS/$APP_NAME"
 
 echo "🛠️ Building Wails app..."
-wails build -clean -race -trimpath
+wails build -clean -race -trimpath --debug
 
 if [ $? -ne 0 ]; then
   echo "❌ Build failed"

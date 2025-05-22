@@ -121,9 +121,9 @@ func ExecUpdateSite(context, siteName, epochs, sitePath, objectID string) (strin
 		"--config", "config/sites-config.yaml",
 		"--context", context,
 		"update",
-		"--site-name", siteName,
 		"--epochs", epochs,
 		sitePath,
+		objectID,
 	)
 	cmd.Dir = userDataPath
 	fmt.Println("cmd.Dir", cmd.Dir)

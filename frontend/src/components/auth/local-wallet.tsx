@@ -1,16 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Button from '../Button';
-import { CopyIcon } from 'lucide-react';
-import useWallet from '../../hooks/useWallet';
+import { CopyIcon, Loader } from 'lucide-react';
 
-const LocalWallet: React.FC = () => {
-  const [_, setIsCopied] = useState(false);
-  const { generateWallet, newWallet, handleContinue } = useWallet();
-
-  useEffect(() => {
-    generateWallet()
-  }, []);
-
+const LocalWallet: React.FC<{ newWallet: any, isGenerating: boolean, handleContinue: (address: string) => void, isSwitching: boolean }> = ({ newWallet, isGenerating, handleContinue, isSwitching  }) => {
+  const [_, setIsCopied] = useState(false); 
+  
+  console.log("newWallet", newWallet, isGenerating, isSwitching);
   const handleCopy = (value: string) => {
     navigator.clipboard.writeText(value);
     setIsCopied(true);
@@ -39,35 +34,42 @@ const LocalWallet: React.FC = () => {
         This is the only time we will show your private key. Copy and download your files to proceed.
       </p>
 
+      {isGenerating && (
+        <div className="flex justify-center items-center h-full w-full">
+          <Loader className="animate-spin text-muted-foreground" size={15} />
+        </div>
+      )}
+
       {/* Key/Address Display */}
-      <div className="bg-muted dark:bg-gray-800 p-4 rounded-md text-left space-y-2 max-w-md mx-auto">
-        <div className="flex justify-between text-sm">
-          <span className="font-medium text-foreground">Private Key:</span>
-          <div className="flex items-center flex-row gap-2">
-            <span className="text-muted-foreground font-mono break-all max-w-[200px]">
-              {newWallet.recoveryPhrase}
-            </span>
-            <CopyIcon onClick={() => handleCopy(newWallet.recoveryPhrase || '')} className="text-primary hover:text-primary/80 w-4 h-4" />
+      {!isGenerating && <div className="bg-muted dark:bg-gray-800 p-4 rounded-md text-left space-y-2 max-w-md mx-auto">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium text-foreground">Private Key:</span>
+            <div className="flex items-center flex-row gap-2">
+              <span className="text-muted-foreground font-mono break-all max-w-[200px]">
+                {newWallet.recoveryPhrase}
+              </span>
+              <CopyIcon onClick={() => handleCopy(newWallet.recoveryPhrase || '')} className="text-primary hover:text-primary/80 w-4 h-4" />
+            </div>
           </div>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="font-medium text-foreground">Wallet Address:</span>
-          <div className="flex items-center flex-row gap-2">
-            <span className="text-muted-foreground font-mono break-all max-w-[200px]">
-              {newWallet.address}
-            </span>
-            <CopyIcon onClick={() => handleCopy(newWallet.address)} className="text-primary hover:text-primary/80 w-4 h-4" />
+          <div className="flex justify-between text-sm">
+            <span className="font-medium text-foreground">Wallet Address:</span>
+            <div className="flex items-center flex-row gap-2">
+              <span className="text-muted-foreground font-mono break-all max-w-[200px]">
+                {newWallet.address}
+              </span>
+              <CopyIcon onClick={() => handleCopy(newWallet.address)} className="text-primary hover:text-primary/80 w-4 h-4" />
+            </div>
           </div>
-        </div>
-      </div>
+        </div>}
 
       {/* Continue Button */}
       <Button
         variant="primary"
         onClick={() => handleContinue(newWallet.address)}
-        className="px-6"
+        disabled={isGenerating || isSwitching}
+        className="px-6 w-full"
       >
-        Continue to dashboard
+        {isSwitching ? <Loader className="animate-spin text-white  mx-auto" size={15} /> : "Continue to dashboard"}
       </Button>
     </div>
   );

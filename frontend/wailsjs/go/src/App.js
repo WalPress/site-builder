@@ -74,8 +74,8 @@ export function ListSettings() {
   return window['go']['src']['App']['ListSettings']();
 }
 
-export function ListSites() {
-  return window['go']['src']['App']['ListSites']();
+export function ListSites(arg1) {
+  return window['go']['src']['App']['ListSites'](arg1);
 }
 
 export function Logout() {

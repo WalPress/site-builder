@@ -12,6 +12,7 @@ const useSetting = () => {
   const getSettings = async () => {
     setLoading(true);
     const response = await ListSettings();
+    console.log("response", response);
     const settings = response.reduce((acc: Settings, setting) => {
       acc[setting.key] = setting.value;
       return acc;
@@ -28,7 +29,7 @@ const useSetting = () => {
     setLoading(false);
   };
 
-  return { settings, getSettings, setSetting, loading };
+  return { settings, getSettings, setSetting, loading }
 };
 
 export default useSetting;

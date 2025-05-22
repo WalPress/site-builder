@@ -3,11 +3,10 @@ import {
     FiHome, FiGrid, FiDatabase, FiSettings, FiLogOut
 } from 'react-icons/fi'; // Example icons
 import { useLocation, Link } from 'react-router-dom'; // Import useLocation and Link
-import walpressLogo from "../assets/walpresslogo.png";
-import { useAccount } from '../context/account';
+import walpressLogo from "../../assets/walpresslogo.png";
+import { useAccount } from '../../context/account';
 
 // --- Sidebar Components ---
-
 interface NavItemProps {
   label: string;
   icon?: React.ReactNode;
@@ -53,6 +52,7 @@ const NavGroup: React.FC<NavGroupProps> = ({ title, children }) => {
 
 const Sidebar: React.FC = () => {
   const { logout } = useAccount();
+  
   // Logout handler function
   const handleLogout = () => {
     logout();

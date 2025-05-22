@@ -163,7 +163,7 @@ func (d *Downloader) downloadSuiBinaryWithProgress(network NetworkType) error {
 		Total:  contentLen,
 		Callback: func(p int) {
 			// Update Sui progress (0-100 maps to 0-50 overall)
-			// fmt.Println("Updating Sui progress:", p)
+			fmt.Println("Updating Sui progress:", p)
 			d.setSuiProgress(p)
 		},
 	}
@@ -467,32 +467,35 @@ func (d *Downloader) checkWalrusClientConfig(network NetworkType) {
 			log.Fatalf("Failed to create config file %s: %v", configFilePath, err)
 		}
 		defer out.Close()
-		fmt.Println("Opened destination file:", configFilePath)
-		url := "https://docs.wal.app/setup/" + configFile
-		resp, err := http.Get(url)
-		if err != nil {
-			log.Fatalf("Failed to download config file %s: %v", configFilePath, err)
-		}
-		defer resp.Body.Close()
-		fmt.Println("Closed response body")
-		if resp.StatusCode != http.StatusOK {
-			fmt.Println("Failed to download client_config.yaml:", resp)
-			log.Fatalf("Failed to download config file %s: %v", configFilePath, err)
-		}
-		fmt.Println("Downloaded client_config.yaml")
-		contentLen := resp.ContentLength
-		progressWriter := &ProgressWriter{
-			Writer: out,
-			Total:  contentLen,
-			Callback: func(p int) {
-				fmt.Println("Updating client_config.yaml progress:", p)
-			},
-		}
 
-		_, err = io.Copy(progressWriter, resp.Body)
-		if err != nil {
-			log.Fatalf("Failed to copy config file %s: %v", configFilePath, err)
-		}
+		createNewConfig(configFilePath, filepath.Join(configDir, "client.yaml"))
+
+		// fmt.Println("Opened destination file:", configFilePath)
+		// url := "https://docs.wal.app/setup/" + configFile
+		// resp, err := http.Get(url)
+		// if err != nil {
+		// 	log.Fatalf("Failed to download config file %s: %v", configFilePath, err)
+		// }
+		// defer resp.Body.Close()
+		// fmt.Println("Closed response body")
+		// if resp.StatusCode != http.StatusOK {
+		// 	fmt.Println("Failed to download client_config.yaml:", resp)
+		// 	log.Fatalf("Failed to download config file %s: %v", configFilePath, err)
+		// }
+		// fmt.Println("Downloaded client_config.yaml")
+		// contentLen := resp.ContentLength
+		// progressWriter := &ProgressWriter{
+		// 	Writer: out,
+		// 	Total:  contentLen,
+		// 	Callback: func(p int) {
+		// 		fmt.Println("Updating client_config.yaml progress:", p)
+		// 	},
+		// }
+
+		// _, err = io.Copy(progressWriter, resp.Body)
+		// if err != nil {
+		// 	log.Fatalf("Failed to copy config file %s: %v", configFilePath, err)
+		// }
 		// curl https://docs.wal.app/setup/client_config.yaml -o ./config/walrus_client.yaml
 		// curlCmd := exec.Command("curl", "https://docs.wal.app/setup/"+configFile, "-o", configFilePath)
 		// curlCmd.Stdout = out
@@ -510,7 +513,7 @@ func (d *Downloader) checkWalrusClientConfig(network NetworkType) {
 	}
 
 	// Update the wallet config
-	updateWalletConfig(configFilePath, string(network), filepath.Join(configDir, "client.yaml"))
+	// updateWalletConfig(configFilePath, string(network), filepath.Join(configDir, "client.yaml"))
 
 	fmt.Println("✅ Successfully updated", configFilePath)
 
@@ -534,7 +537,7 @@ func (d *Downloader) checkWalrusClientConfig(network NetworkType) {
 }
 
 // Check for config/sites-config.yaml
-func (d *Downloader) checkWalrusSiteConfig(network NetworkType) {
+func (d *Downloader) checkWalrusSiteConfig() {
 	fmt.Println("Checking Walrus site config...")
 	configDir, err := utils.GetConfigPath()
 	if err != nil {
@@ -578,11 +581,11 @@ contexts:
     package: 0x26eb7ee8688da02c5f671679524e379f0b837a12f1d1d799f255b7eea260ad27
     general:
       rpc_url: https://fullnode.mainnet.sui.io:443
-        wallet: ` + suiConfigFile + `
-        walrus_binary: ` + walrusFile + `
-        walrus_config: ` + configDir + "/client_config.yaml" + `
-        gas_budget: 500000000
-default_context: ` + string(network) + `
+      wallet: ` + suiConfigFile + `
+      walrus_binary: ` + walrusFile + `
+      walrus_config: ` + configDir + "/client_config.yaml" + `
+      gas_budget: 500000000
+default_context: mainnet
 `
 		if writeErr := os.WriteFile(sitesConfigPath, []byte(defaultSitesConfigContent), 0644); writeErr != nil {
 			log.Fatalf("Failed to write default content to %s: %v", sitesConfigPath, writeErr)
@@ -599,7 +602,7 @@ default_context: ` + string(network) + `
 func (d *Downloader) CheckDownloadStatus() (bool, error) {
 	d.checkRustInstallation()
 	d.checkWalrusClientConfig(Testnet)
-	d.checkWalrusSiteConfig(Testnet)
+	d.checkWalrusSiteConfig()
 
 	// Check if the user has downloaded the binaries
 	toolsDir, err := utils.GetToolsPath()

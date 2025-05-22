@@ -14,7 +14,7 @@ const RegisterStep3: React.FC<RegisterStep3Props> = ({
   transactionId = "0xabc123...xyz789", // Placeholder
 }) => {
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg w-full text-center">
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg w-full text-center max-w-md">
       <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Registration Submitted!</h2>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">

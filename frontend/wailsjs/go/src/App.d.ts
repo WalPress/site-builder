@@ -41,7 +41,7 @@ export function ImportWallet():Promise<void>;
 
 export function ListSettings():Promise<Array<settings.Settings>>;
 
-export function ListSites():Promise<Array<site.Site>>;
+export function ListSites(arg1:string):Promise<Array<site.Site>>;
 
 export function Logout():Promise<string>;
 

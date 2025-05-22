@@ -82,8 +82,9 @@ func GetTestnetFaucet() (interface{}, error) {
 }
 
 func GetPrivateKey(address string) (interface{}, error) {
-	out, err := utils.RunSuiCommandKeytoolExport("0xfd64f9d263fd3b0a12d5a9d1a321f9e389e7ddbb644a2b58c572f930bbd4d630")
+	out, err := utils.RunSuiCommandKeytoolExport(address)
 	if err != nil {
+		fmt.Println("Error getting private key:", err)
 		return nil, err
 	}
 	return out, nil

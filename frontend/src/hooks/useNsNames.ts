@@ -2,20 +2,32 @@ import { getSuinsClient, getSUiClient } from "../utils/helper";
 import { Transaction } from "@mysten/sui/transactions";
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
-import {  useState } from "react";
+import {  useEffect, useState } from "react";
 import { useAccount } from "../context/account";
-import { SuinsTransaction } from "@mysten/suins";
-
-
+import { ALLOWED_METADATA, SuinsTransaction } from "@mysten/suins";
+import * as runtime from "../../wailsjs/runtime";
+import useSetting from "./useSetting";
 
 const useNsNames = () => {
     const [nsNames, setNsNames] = useState<{objectId: string, name: string, link: string, expiry: number}[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const { settings, getSettings } = useSetting();
     const { getPrivateKey } = useAccount();
+
+    useEffect(() => {
+        getSettings();
+    }, []);
+
+    const getSettingsValues = () => {
+        return {
+            gasBudget: Number(settings?.gas || "0.001"),
+            pricePerYear: 5,
+        }
+    }
 
     const searchNs = async (domain: string): Promise<boolean> => {
         const client = getSuinsClient("mainnet")
-        const response = await client.getNameRecord(domain + ".sui");
+        const response = await client.getNameRecord(domain.toLowerCase() + ".sui");
         console.log("searchNs", response);
         return !!response;
     }
@@ -62,33 +74,50 @@ const useNsNames = () => {
             const suiClient = getSUiClient("mainnet")
             const transaction = new Transaction();
             const suinsTx = new SuinsTransaction(client, transaction);
-            // Specify the coin type used for the transaction, can be SUI/NS/USDC
+            // Specify the coin type used for the transaction, can be SUI
             const coinConfig = client.config.coins.SUI;
             const privateKey = await getPrivateKey();
             const keypair = Ed25519Keypair.fromSecretKey(privateKey);
+            const amountToPay = years * 5;
+            const gasbudgetValue = settings?.gas || "0.001";
+            transaction.setGasBudget(Number(gasbudgetValue) * 1_000_000_000);
+            const maxPaymentAmount = amountToPay * 1_000_000_000;
+            const [coin] = suinsTx.transaction.splitCoins(suinsTx.transaction.gas, [maxPaymentAmount]);
             
-            console.log("coinConfig", coinConfig, "sui-address", keypair.toSuiAddress());
             // priceInfoObjectId is required for SUI/NS
             const priceInfoObjectId = (await client.getPriceInfoObject(suinsTx.transaction, coinConfig.feed))[0];
 
-            console.log("priceInfoObjectId", priceInfoObjectId);
+            runtime.LogInfo(`priceInfoObjectId: ${priceInfoObjectId}, coinConfig: ${coinConfig}`);
+
             const nft = suinsTx.register({
-                domain: domain,
+                domain: domain.toLowerCase() + ".sui",
                 years: years,
-                coinConfig: coinConfig,
-                coin: coinConfig.type,
-                priceInfoObjectId: priceInfoObjectId,
+                coinConfig,
+                coin,
+                priceInfoObjectId,
             });
-            transaction.transferObjects([nft], transaction.pure.address(keypair.toSuiAddress()));
             
+            runtime.LogInfo(`nft: ${nft}, coin: ${coin}, address: ${keypair.toSuiAddress()}`);
+            suinsTx.transaction.transferObjects(
+                [nft, coin],
+                keypair.toSuiAddress(),
+            );
+            
+            runtime.LogInfo(`suiTx--> ${transaction}`);
+
             const response = await suiClient.signAndExecuteTransaction({
                 transaction: transaction,
                 signer: keypair,
             });
-            console.log('Name registered successfully:', response);
+
+            runtime.LogInfo(`suiTx--> ${transaction}`);
+
+            runtime.LogInfo(`Name registered successfully: ${response.digest}`);
+            const validateTx = await suiClient.waitForTransaction({digest: response.digest});
+            runtime.LogInfo(`validateTx--> ${validateTx}`);
             return response;
         } catch (error) {
-            console.error('Error registering name:', error);
+            runtime.LogInfo(`Error registering name: ${error}`);
             throw error;
         }
     }
@@ -104,20 +133,30 @@ const useNsNames = () => {
             const privateKey = await getPrivateKey();
             const keypair = Ed25519Keypair.fromSecretKey(privateKey);
             
-            suinsTx.setTargetAddress({
+            // suinsTx.setTargetAddress({
+            //     nft: nftId,
+            //     address: objectId,
+            //     isSubname: false,
+            // });
+
+            suinsTx.setUserData({
                 nft: nftId,
-                address: objectId,
+                key: ALLOWED_METADATA.walrusSiteId,
+                value: objectId,
                 isSubname: false,
-            });
+            })
+
+            runtime.LogInfo(`nftId: ${nftId}, objectId: ${objectId}`);
             
             const response = await suiClient.signAndExecuteTransaction({
                 transaction: transaction,
                 signer: keypair,
             });
-            console.log('Name linked successfully:', response);
+            runtime.LogInfo(`Name linked successfully: ${response}`);
             return response;
         } catch (error) {
             console.error('Error linking name:', error);
+            runtime.LogInfo(`Error linking name: ${error}`);
             throw error;
         }  
     }
@@ -145,15 +184,15 @@ const useNsNames = () => {
                 transaction: transaction,
                 signer: keypair,
             });
-            console.log('Name linked successfully:', response);
+            runtime.LogInfo(`Renewed NS successfully: ${response}`);
             return response;
         } catch (error) {
-            console.error('Error linking name:', error);
+            runtime.LogInfo(`Error renewing NS: ${error}`);
             throw error;
         }  
     }
     
-    return { searchNs, nsNames, isLoading, getNsNames, registerNs, LinkNsName, renewNs };
+    return { searchNs, nsNames, isLoading, getNsNames, registerNs, LinkNsName, renewNs, getSettingsValues };
 }
 
 export default useNsNames;
