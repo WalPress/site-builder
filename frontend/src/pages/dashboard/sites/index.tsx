@@ -76,7 +76,7 @@ const MySitesPage: React.FC = () => {
               status={mapApiStatusToSiteStatus(site.status, site.published)}
               imageUrl={site1Img}
               lastEdited={dayjs(site.updatedAt).fromNow()}
-              description={"Lorem ipsum dolor sit amet consectetur. Elit in eget risus fames massa maecenas malesuada."}
+              description={"site descriptions goes here."}
               blobId={site.blobId}
               actionText={site.status === "linked" ? "Visit site" : site.published ? "Update site" : "Deploy site"}
               onActionClick={() => alert(`Action clicked for ${site.name}`)}
