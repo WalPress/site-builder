@@ -100,7 +100,7 @@ const SettingsPage: React.FC = () => {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          Lorem ipsum dolor sit amet consectetur. Mattis elementum pretium libero
+         Customize and control your experience with ease. Manage preferences, update security settings, and configure integrations all in one place. Tailor your environment to suit your needs and stay in full control.
         </p>
       </div>
 
