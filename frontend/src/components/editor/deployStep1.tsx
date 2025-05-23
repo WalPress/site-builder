@@ -49,16 +49,16 @@ const DeploymentStep1: React.FC<DeploymentStep1Props> = ({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg w-[400px]">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Deploy {siteName} to the Walrus</h2>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Lorem ipsum dolor sit amet consectetur. </p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Deploying your site means hosting it on Walrus, with the option to set the duration for how long you'd like it to remain live.</p>
       
       <div className="mb-4">
         <div className="flex justify-between items-center mb-1">
           <label htmlFor="epochInput" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Set Epoach / Duration
+            Set Epoch / Duration
           </label>
           <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 group relative text-[#1585E0]">
             <FiInfo className="mr-1" />
-            <span>What is an epoach?</span>
+            <span>What is an epoch?</span>
             {/* Basic tooltip styling idea (can be improved) */}
             {/* <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap w-fit">
               Tooltip text about epoach goes here.
